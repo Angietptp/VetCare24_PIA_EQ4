@@ -1,0 +1,45 @@
+flowchart TB
+  subgraph CLI["Clientes"]
+    SW["Swagger UI /docs"]
+    HC["Cliente HTTP (X-Rol)"]
+  end
+  subgraph API["api/ — FastAPI"]
+    R["rutas.py · errores_http.py · main.py"]
+  end
+  subgraph APP["application/ — casos de uso"]
+    S1["ServicioDeCitas (CU-01)"]
+    S2["ServicioDeVacunacion (CU-03)"]
+    S3["ServicioDeEmergencias (CU-05)"]
+    S4["ServicioDeRegistro"]
+    CA["control_de_acceso (roles y permisos)"]
+    DESP["Despachador de eventos"]
+    PORT["puertos: UnidadDeTrabajo, repositorios, NotificadorDeVeterinario"]
+  end
+  subgraph DOM["domain/ — reglas de negocio puras"]
+    AG["Agregados: Cita, Mascota, Propietario, Vacunacion, Emergencia"]
+    SPEC["Specifications AND / OR / NOT"]
+    SM["Máquinas de estado: CicloDeVidaDeCita / Emergencia"]
+    EV["Eventos de dominio"]
+    VO["Money, errores de dominio"]
+  end
+  subgraph INF["infrastructure/ — adaptadores"]
+    UOW["UnidadDeTrabajoSql + repositorios SQL explícito"]
+    CSV["csv_loader + adaptador_paquete"]
+    NOT["BandejaDeAvisos (notificador)"]
+    CFG["config (variables de entorno)"]
+  end
+  DB[("PostgreSQL 16 / SQLite en pruebas")]
+  SW --> R
+  HC --> R
+  R --> CA
+  R --> S1 & S2 & S3 & S4
+  S1 & S2 & S3 & S4 --> AG
+  S1 & S2 & S3 --> DESP
+  AG --> SPEC & SM & EV & VO
+  S1 & S2 & S3 & S4 -. depende de .-> PORT
+  UOW -. implementa .-> PORT
+  NOT -. implementa .-> PORT
+  UOW --> DB
+  CSV --> AG
+  CFG --> UOW
+  classDef out fill:#f3d2d2,stroke:#c81e1e,stroke-dasharray:4 3;

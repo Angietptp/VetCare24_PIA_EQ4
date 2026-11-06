@@ -1,0 +1,11 @@
+flowchart LR
+  DEV["Desarrollador<br/>git push / pull request"] --> GH["GitHub<br/>repositorio + ruleset de main"]
+  GH --> CI["GitHub Actions<br/>lint (ruff) → pruebas + cobertura ≥ 80 % → docker build"]
+  CI -->|"merge a main"| GHCR["GHCR<br/>imagen vetcare24"]
+  GH -->|"auto-deploy"| PAAS["Plataforma (Render / Railway / Fly.io)<br/>contenedor app · puerto $PORT"]
+  PAAS --> PG[("PostgreSQL administrado<br/>DATABASE_URL")]
+  USER["Usuario / profesor"] -->|"HTTPS /docs"| PAAS
+  subgraph LOCAL["Docker Compose local"]
+    A["app"] --> D[("db postgres:16")]
+    T["tests (profile tests)"] --> D
+  end

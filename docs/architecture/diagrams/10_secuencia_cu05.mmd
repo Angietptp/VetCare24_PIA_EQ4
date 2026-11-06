@@ -1,0 +1,30 @@
+sequenceDiagram
+  actor Rec as Recepción
+  participant API as FastAPI (rutas)
+  participant SE as ServicioDeEmergencias
+  participant CA as control_de_acceso
+  participant UOW as UnidadDeTrabajoSql
+  participant D as Emergencia / CicloDeVida
+  participant DS as Despachador
+  participant N as NotificadorDeVeterinario
+  Rec->>API: POST /emergencias (X-Rol: recepcion)
+  API->>SE: atender_emergencia(rol, comando)
+  SE->>CA: exigir(ATENDER_EMERGENCIA)
+  CA-->>SE: permitido (si no: 403)
+  SE->>UOW: abrir transacción
+  opt viene mascota_id
+    SE->>UOW: mascotas.obtener(id) (404 si no existe)
+  end
+  SE->>D: identificar(motivo, mascota?, datos_paciente?)
+  D-->>SE: Emergencia IDENTIFICADA + evento EmergenciaIdentificada
+  SE->>UOW: emergencias.agregar + eventos.agregar
+  SE->>UOW: commit
+  SE->>DS: publicar(eventos) tras el commit
+  SE->>N: notificar(emergencia)
+  alt notificado
+    N-->>SE: ok
+  else falla el aviso
+    N--xSE: error (no se deshace el registro)
+  end
+  SE-->>API: ResultadoDeEmergencia
+  API-->>Rec: 201 {protocolo_activado, notificacion}

@@ -1,0 +1,24 @@
+classDiagram
+  class Specification~T~ {
+    <<abstract>>
+    +evaluar(contexto) Evaluacion
+    +y(otra) Specification
+    +o(otra) Specification
+    +no() Specification
+  }
+  class AndSpecification
+  class OrSpecification
+  class NotSpecification
+  Specification <|-- AndSpecification
+  Specification <|-- OrSpecification
+  Specification <|-- NotSpecification
+  class PuedeProcesarse["PuedeProcesarse = ActorActivo AND DetalleNoVacio AND Autorizada"]
+  class AtencionPermitida["AtencionPermitida = TieneCitaConfirmada OR TieneEmergenciaActiva (R-06)"]
+  class SeguimientoCalculable["SeguimientoCalculable = EsquemaDefinido AND EsquemaValidado (R-12)"]
+  class SeguimientoPendiente["SeguimientoPendiente = NOT SeguimientoCalculable"]
+  class BeneficioDeReferencia["BeneficioDeReferencia = Preferente AND Total>=1500 AND NOT Promocion"]
+  Specification <|.. PuedeProcesarse
+  Specification <|.. AtencionPermitida
+  Specification <|.. SeguimientoCalculable
+  Specification <|.. SeguimientoPendiente
+  Specification <|.. BeneficioDeReferencia

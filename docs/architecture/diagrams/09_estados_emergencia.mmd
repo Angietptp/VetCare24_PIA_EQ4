@@ -1,0 +1,5 @@
+stateDiagram-v2
+  [*] --> IDENTIFICADA: atender_emergencia (Recepción, sin cita, notifica al veterinario)
+  IDENTIFICADA --> EN_ATENCION: iniciar_atencion (Personal clínico)
+  EN_ATENCION --> [*]
+  note right of EN_ATENCION: El cierre de la emergencia queda fuera de alcance (N-02)

@@ -1,0 +1,11 @@
+stateDiagram-v2
+  [*] --> SOLICITADA: agendar
+  SOLICITADA --> CONFIRMADA: confirmar (elegible + líneas válidas + capacidad)
+  CONFIRMADA --> REALIZADA: realizar (veterinario)
+  SOLICITADA --> CANCELADA: cancelar
+  CONFIRMADA --> CANCELADA: cancelar (libera capacidad)
+  SOLICITADA --> SOLICITADA: modificar
+  CONFIRMADA --> CONFIRMADA: modificar (revalida capacidad)
+  REALIZADA --> [*]
+  CANCELADA --> [*]
+  note right of REALIZADA: Estados terminales. Otra transición responde 409 TRANSICION_INVALIDA

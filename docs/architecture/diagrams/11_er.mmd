@@ -1,0 +1,60 @@
+erDiagram
+  PROPIETARIOS ||--o{ MASCOTAS : posee
+  PROPIETARIOS ||--o{ CITAS : solicita
+  MASCOTAS ||--o{ CITAS : recibe
+  CITAS ||--|{ CITA_LINEAS : contiene
+  SERVICIOS ||--o{ CITA_LINEAS : "se solicita en"
+  MASCOTAS ||--o{ VACUNACIONES : recibe
+  ESQUEMAS_VACUNACION ||--o{ VACUNACIONES : "define seguimiento por vacuna_clave"
+  MASCOTAS |o--o{ EMERGENCIAS : presenta
+  PROPIETARIOS { text propietario_id PK
+    text nombre
+    int activo
+    int preferente }
+  MASCOTAS { text mascota_id PK
+    text propietario_id FK
+    text nombre
+    text especie
+    text raza
+    text sexo
+    text fecha_nacimiento
+    text peso_kg
+    text alergias_json }
+  SERVICIOS { text servicio_id PK
+    text descripcion
+    bigint precio_centavos
+    int capacidad
+    int habilitado }
+  CITAS { text cita_id PK
+    text propietario_id FK
+    text mascota_id FK
+    text fecha_solicitud
+    text estado
+    int autorizada
+    int promocion_activa }
+  CITA_LINEAS { text cita_id PK
+    int posicion PK
+    text servicio_id FK
+    int cantidad }
+  VACUNACIONES { text vacunacion_id PK
+    text mascota_id FK
+    text vacuna
+    text vacuna_clave
+    text fecha_aplicacion
+    text lote }
+  ESQUEMAS_VACUNACION { text vacuna_clave PK
+    int frecuencia_dias
+    int requiere_refuerzo
+    int validado }
+  EMERGENCIAS { text emergencia_id PK
+    text mascota_id FK "opcional"
+    text motivo
+    text datos_paciente
+    text estado
+    text identificada_en
+    text atendida_en }
+  EVENTOS_DOMINIO { text evento
+    text agregado_tipo
+    text agregado_id
+    text ocurrido_en
+    text payload_json }
