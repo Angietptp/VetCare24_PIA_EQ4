@@ -41,8 +41,8 @@ fly deploy
 ## Verificación
 
 ```bash
-curl https://https://vetcare24-production.up.railway.app/health                       # {"status":"ok"}
-curl -H "X-Rol: recepcion" https://https://vetcare24-production.up.railway.app/servicios
+curl https://vetcare24-production.up.railway.app/health                       # {"status":"ok"}
+curl -H "X-Rol: recepcion" https://vetcare24-production.up.railway.app/servicios
 ```
 
 Swagger UI queda en `/docs` y el contrato en `/openapi.json`.

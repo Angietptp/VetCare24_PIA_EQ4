@@ -56,7 +56,7 @@ Cada solicitud indica el rol en el encabezado `X-Rol` (`recepcion`, `veterinario
 
 ## Calidad
 
-Última medición completa: 584 pruebas, 98.81 % de cobertura (umbral exigido: 80 %), en SQLite y PostgreSQL 16; después se añadieron 2 pruebas para la normalización de la URL de la base. CI en cada pull request: `ruff`, `pytest` con PostgreSQL, evidencia (120 casos, 20 transiciones y 20 escenarios de emergencias) y construcción de la imagen.
+Última medición completa (CI en verde): 696 pruebas, 99.14 % de cobertura (umbral exigido: 80 %), en SQLite y PostgreSQL 16. CI en cada pull request: `ruff`, `pytest` con PostgreSQL, evidencia (120 casos, 20 transiciones y 20 escenarios de emergencias) y construcción de la imagen.
 
 ## Ejecutar sin Docker
 ```bash
