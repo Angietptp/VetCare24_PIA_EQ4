@@ -5,6 +5,8 @@ from fastapi.testclient import TestClient
 
 from tests.api_emergencias import ESCENARIOS, ejecutar, sembrar_mascotas
 from tests.bd import BACKENDS, preparar, sembrar_basico
+from tests.errores import codigo as codigo_de_error
+from tests.errores import motivos as motivos_de_error
 from vetcare24.api.main import create_app
 
 RECEPCION = {"X-Rol": "recepcion"}
@@ -82,7 +84,7 @@ def test_los_mensajes_de_error_hablan_de_la_emergencia(backend, tmp_path):
     otra_vez = cliente.post(ruta, headers=CLINICO)
     assert _error(otra_vez)["mensaje"] == \
         "No se puede iniciar la atención de una emergencia que está en atención."
-    assert _error(otra_vez)["motivos"] == ["iniciar_atencion desde EN_ATENCION"]
+    assert motivos_de_error(otra_vez) == ["iniciar_atencion desde EN_ATENCION"]
     assert _error(cliente.post("/emergencias", json={"motivo": "x"}, headers=VET))[
         "mensaje"] == "El rol Veterinario no tiene permiso para registrar emergencias."
     assert _error(cliente.get("/emergencias/EMER-NO", headers=VET))["mensaje"] == \
@@ -91,7 +93,7 @@ def test_los_mensajes_de_error_hablan_de_la_emergencia(backend, tmp_path):
         "mensaje"] == "Falta indicar el motivo."
     blanco = cliente.post("/emergencias", json={"motivo": "x", "datos_paciente": " "},
                           headers=RECEPCION)
-    assert (blanco.status_code, _error(blanco)["codigo"]) == (422, "DATOS_PACIENTE_VACIOS")
+    assert (blanco.status_code, codigo_de_error(blanco)) == (422, "DATOS_PACIENTE_VACIOS")
 
 
 @pytest.mark.parametrize("backend", BACKENDS)

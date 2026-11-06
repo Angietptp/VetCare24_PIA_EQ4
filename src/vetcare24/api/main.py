@@ -41,25 +41,42 @@ DESCRIPCION = (
     "CU-05: emergencias sin cita). Cada solicitud indica el rol "
     "en el encabezado `X-Rol`. "
     "Errores (siempre con "
-    "`error.codigo`, `error.mensaje`, `error.detalles` y `error.motivos`): 400 solicitud mal "
+    "`error.mensaje`, y `error.detalles` si hay campos inválidos; el código estable viaja en "
+    "el encabezado `X-Codigo-Error`): 400 solicitud mal "
     "formada o rol desconocido, 401 falta rol, 403 sin permiso, 404 no existe, 409 transición "
     "inválida, capacidad insuficiente o duplicado, 422 regla de negocio no cumplida."
 )
 
 
+def _respuesta_de_error(
+    estado: int, cuerpo: dict, extra: dict[str, str] | None = None
+) -> JSONResponse:
+    """El cuerpo solo trae lo que entiende quien usa el sistema: el mensaje en español (y los
+    campos inválidos, si los hay). El código estable y los motivos, que sirven a los programas,
+    viajan en los encabezados `X-Codigo-Error` y `X-Motivos`."""
+    error = cuerpo["error"]
+    publico: dict = {"mensaje": error["mensaje"]}
+    if error["detalles"]:
+        publico["detalles"] = error["detalles"]
+    encabezados = {**(extra or {}), "X-Codigo-Error": error["codigo"]}
+    if error["motivos"]:
+        encabezados["X-Motivos"] = "|".join(error["motivos"])
+    return JSONResponse(status_code=estado, content={"error": publico}, headers=encabezados)
+
+
 def _manejar_error_de_negocio(_: Request, error: Exception) -> JSONResponse:
     codigo, cuerpo = traducir(error) or (500, cuerpo_de_error("ERROR_INTERNO", "Error interno"))
-    return JSONResponse(status_code=codigo, content=cuerpo)
+    return _respuesta_de_error(codigo, cuerpo)
 
 
 def _manejar_solicitud_invalida(_: Request, error: RequestValidationError) -> JSONResponse:
     codigo, cuerpo = solicitud_invalida(list(error.errors()))  # D-13: 400 payload mal formado
-    return JSONResponse(status_code=codigo, content=cuerpo)
+    return _respuesta_de_error(codigo, cuerpo)
 
 
 def _manejar_error_http(_: Request, error: ErrorHttp) -> JSONResponse:
     codigo, cuerpo = error_http(error.status_code)  # 404/405 con el mismo formato que el resto
-    return JSONResponse(status_code=codigo, content=cuerpo, headers=error.headers)
+    return _respuesta_de_error(codigo, cuerpo, dict(error.headers or {}))
 
 
 def create_app(database_url: str | None = None, *, preparar_esquema: bool = True) -> FastAPI:

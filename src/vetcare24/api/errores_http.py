@@ -1,6 +1,8 @@
 """Traducción de errores a respuestas HTTP (D-13, H-07) con mensajes para el cliente.
 
-Función pura: no depende de FastAPI, así se prueba sin levantar el servidor.
+Función pura: no depende de FastAPI, así se prueba sin levantar el servidor. Esta es la forma
+completa; `main.py` solo deja el `mensaje` (y `detalles`) en el cuerpo HTTP y manda `codigo` y
+`motivos` en los encabezados `X-Codigo-Error` y `X-Motivos`.
 Todas las respuestas de error tienen la misma forma:
     {"error": {"codigo": "...", "mensaje": "...", "detalles": [...], "motivos": [...]}}
 `codigo` es corto y estable (para programas); `mensaje` es una frase en español pensada para

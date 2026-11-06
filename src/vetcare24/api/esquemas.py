@@ -122,17 +122,14 @@ class DetalleDeCampo(BaseModel):
 
 
 class CuerpoDeError(BaseModel):
-    codigo: str = Field(examples=["TRANSICION_INVALIDA"], description="Estable, para programas.")
     mensaje: str = Field(description="Frase en español lista para mostrarse.")
-    detalles: list[DetalleDeCampo] = Field(
-        default_factory=list, description="Campos inválidos de una solicitud mal formada.")
-    motivos: list[str] = Field(
-        default_factory=list, description="Códigos de las reglas incumplidas.",
-        examples=[["ACTOR_INACTIVO"]])
+    detalles: list[DetalleDeCampo] | None = Field(
+        None, description="Solo si la solicitud estaba mal formada: los campos inválidos.")
 
 
 class ErrorOut(BaseModel):
-    """Forma común de todos los errores: {"error": {codigo, mensaje, detalles, motivos}}."""
+    """Forma común de los errores: {"error": {mensaje}}. El código estable y los motivos para
+    programas viajan en los encabezados `X-Codigo-Error` y `X-Motivos`."""
 
     error: CuerpoDeError
 

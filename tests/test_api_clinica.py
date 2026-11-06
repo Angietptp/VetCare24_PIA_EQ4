@@ -4,6 +4,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from tests.bd import BACKENDS, preparar, sembrar_basico
+from tests.errores import codigo as codigo_de_error
+from tests.errores import motivos as motivos_de_error
 from vetcare24.api.main import create_app
 
 RECEPCION = {"X-Rol": "recepcion"}
@@ -19,7 +21,7 @@ def _cliente(backend, tmp_path):
 
 
 def _codigo(respuesta):
-    return respuesta.json()["error"]["codigo"]
+    return codigo_de_error(respuesta)
 
 
 # --- CU-02 ---
@@ -75,7 +77,7 @@ def test_nota_con_cita_no_realizada_responde_422(backend, tmp_path):
     r = c.post("/mascotas/M1/notas-clinicas", headers=VET,
                json={"diagnostico": "X", "cita_id": "C1"})
     assert (r.status_code, _codigo(r)) == (422, "PRECONDICION_NO_CUMPLIDA")
-    assert r.json()["error"]["motivos"] == ["CITA_NO_REALIZADA"]
+    assert motivos_de_error(r) == ["CITA_NO_REALIZADA"]
     c.post("/citas/C1/confirmar", headers=RECEPCION)
     c.post("/citas/C1/realizar", headers=VET)
     r = c.post("/mascotas/M1/notas-clinicas", headers=VET,
@@ -124,7 +126,7 @@ def test_errores_de_hospitalizacion(backend, tmp_path):
     assert (r.status_code, _codigo(r)) == (409, "YA_EXISTE")
     r = c.post("/hospitalizaciones", headers=VET, json=cuerpo)
     assert (r.status_code, _codigo(r)) == (422, "PRECONDICION_NO_CUMPLIDA")
-    assert r.json()["error"]["motivos"] == ["MASCOTA_YA_HOSPITALIZADA"]
+    assert motivos_de_error(r) == ["MASCOTA_YA_HOSPITALIZADA"]
     r = c.post("/hospitalizaciones/H-1/monitoreo", headers=VET,
                json={"observaciones": "x", "temperatura_c": "60"})
     assert (r.status_code, _codigo(r)) == (422, "TEMPERATURA_INVALIDA")
@@ -222,13 +224,13 @@ def test_cobro_y_entrega_de_documentacion_por_http(backend, tmp_path):
     c.post("/citas/C1/confirmar", headers=RECEPCION)
     c.post("/citas/C1/realizar", headers=VET)
     r = c.post("/citas/C1/documentacion", headers=RECEPCION)
-    assert r.status_code == 422 and r.json()["error"]["motivos"] == ["CITA_SIN_COBRO"]
+    assert r.status_code == 422 and motivos_de_error(r) == ["CITA_SIN_COBRO"]
     r = c.post("/citas/C1/cobro", headers=RECEPCION, json={"metodo": "tarjeta"})
     assert r.status_code == 201, r.text
     assert (r.json()["total_mxn"], r.json()["metodo"]) == ("900.00", "tarjeta")
     assert c.get("/citas/C1/cobro", headers=RESP).json()["cobro_id"] == r.json()["cobro_id"]
     r2 = c.post("/citas/C1/cobro", headers=RECEPCION, json={"metodo": "efectivo"})
-    assert r2.status_code == 422 and r2.json()["error"]["motivos"] == ["CITA_YA_COBRADA"]
+    assert r2.status_code == 422 and motivos_de_error(r2) == ["CITA_YA_COBRADA"]
     c.post("/mascotas/M1/notas-clinicas", headers=VET,
            json={"diagnostico": "Otitis", "cita_id": "C1"})
     c.post("/mascotas/M1/recetas", headers=VET, json={

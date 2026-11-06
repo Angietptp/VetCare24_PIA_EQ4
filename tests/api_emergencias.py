@@ -15,6 +15,7 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
+from tests.errores import codigo as codigo_de_error
 from vetcare24.domain.mascota import Mascota
 from vetcare24.infrastructure.repositorios_sql import UnidadDeTrabajoSql
 
@@ -31,7 +32,7 @@ class Escenario:
     ruta: str
     cuerpo: dict[str, Any] | None
     http_esperado: int
-    resultado_esperado: str  # error.codigo si falla; lo verificado si tiene éxito
+    resultado_esperado: str  # X-Codigo-Error si falla; lo verificado si tiene éxito
     regla: str
 
 
@@ -109,9 +110,9 @@ def sembrar_mascotas(url: str) -> None:
         uow.commit()
 
 
-def _resumir(escenario: Escenario, cuerpo: Any, status: int) -> str:
+def _resumir(escenario: Escenario, cuerpo: Any, status: int, respuesta: Any = None) -> str:
     if status >= 400:
-        return cuerpo["error"]["codigo"]
+        return codigo_de_error(respuesta)
     if escenario.ruta == "/eventos":
         n = sum(1 for e in cuerpo if e["evento"] == "EmergenciaIdentificada")
         return f"{n} EmergenciaIdentificada"
@@ -132,6 +133,6 @@ def ejecutar(cliente: TestClient) -> list[Resultado]:
     for e in ESCENARIOS:
         encabezados = {"X-Rol": e.rol} if e.rol else {}
         respuesta = cliente.request(e.metodo, e.ruta, json=e.cuerpo, headers=encabezados)
-        resultados.append(Resultado(
-            e, respuesta.status_code, _resumir(e, respuesta.json(), respuesta.status_code)))
+        resumen = _resumir(e, respuesta.json(), respuesta.status_code, respuesta)
+        resultados.append(Resultado(e, respuesta.status_code, resumen))
     return resultados

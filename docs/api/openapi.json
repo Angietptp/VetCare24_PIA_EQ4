@@ -3518,44 +3518,29 @@
       },
       "CuerpoDeError": {
         "properties": {
-          "codigo": {
-            "type": "string",
-            "title": "Codigo",
-            "description": "Estable, para programas.",
-            "examples": [
-              "TRANSICION_INVALIDA"
-            ]
-          },
           "mensaje": {
             "type": "string",
             "title": "Mensaje",
             "description": "Frase en español lista para mostrarse."
           },
           "detalles": {
-            "items": {
-              "$ref": "#/components/schemas/DetalleDeCampo"
-            },
-            "type": "array",
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DetalleDeCampo"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Detalles",
-            "description": "Campos inválidos de una solicitud mal formada."
-          },
-          "motivos": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Motivos",
-            "description": "Códigos de las reglas incumplidas.",
-            "examples": [
-              [
-                "ACTOR_INACTIVO"
-              ]
-            ]
+            "description": "Solo si la solicitud estaba mal formada: los campos inválidos."
           }
         },
         "type": "object",
         "required": [
-          "codigo",
           "mensaje"
         ],
         "title": "CuerpoDeError"

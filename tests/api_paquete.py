@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from tests import oraculo
+from tests.errores import codigo as codigo_de_error
+from tests.errores import motivos as motivos_de_error
 from vetcare24.infrastructure.csv_loader import PaqueteDatos
 
 REGLA_DE_CADA_TIPO = {"validar_operacion": "procesamiento", "evaluar_beneficio": "beneficio"}
@@ -100,9 +102,9 @@ def ejecutar_transiciones(cliente: Any, paquete: PaqueteDatos) -> list[Resultado
             respuesta = cliente.post(ruta, headers=_encabezado(rol))
             pasos.append(f"POST {ruta} -> {respuesta.status_code}")
             if respuesta.status_code != 200:
-                error = respuesta.json()["error"]
                 status, codigo, motivos = (
-                    respuesta.status_code, error["codigo"], tuple(error["motivos"]))
+                    respuesta.status_code, codigo_de_error(respuesta),
+                    tuple(motivos_de_error(respuesta)))
                 break
         estado = cliente.get(f"/citas/{caso.operacion_id}", headers=_encabezado("recepcion"))
         eventos = cliente.get("/eventos", headers=_encabezado("responsable")).json()
@@ -143,7 +145,7 @@ def ejecutar_confirmaciones(cliente: Any, paquete: PaqueteDatos) -> Confirmacion
     for cita_id in paquete.operaciones:
         respuesta = cliente.post(f"/citas/{cita_id}/confirmar", headers=_encabezado("recepcion"))
         motivos = (
-            tuple(respuesta.json()["error"]["motivos"]) if respuesta.status_code != 200 else ())
+            tuple(motivos_de_error(respuesta)) if respuesta.status_code != 200 else ())
         resultado[cita_id] = (respuesta.status_code, motivos)
     return resultado
 

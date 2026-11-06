@@ -10,6 +10,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from tests.bd import BACKENDS, preparar, sembrar_basico, sembrar_esquemas
+from tests.errores import codigo as codigo_de_error
+from tests.errores import motivos as motivos_de_error
 from vetcare24.api.main import create_app
 from vetcare24.domain.eventos import CitaAgendada
 
@@ -42,7 +44,7 @@ def _solicitar(cliente, servicios=(("S1", 3),), **extra):
 
 
 def _codigo(respuesta):
-    return respuesta.json()["error"]["codigo"]
+    return codigo_de_error(respuesta)
 
 
 # --- rol ---
@@ -307,13 +309,13 @@ def test_los_errores_traen_los_motivos_como_codigos(backend, tmp_path):
     cita_id = _solicitar(cliente, propietario_id="P2", mascota_id="M2")["cita_id"]
     rechazo = cliente.post(f"/citas/{cita_id}/confirmar", headers=RECEPCION)
     assert rechazo.status_code == 422 and _codigo(rechazo) == "PRECONDICION_NO_CUMPLIDA"
-    assert rechazo.json()["error"]["motivos"] == ["ACTOR_INACTIVO"]
+    assert motivos_de_error(rechazo) == ["ACTOR_INACTIVO"]
     c1, c2 = _solicitar(cliente)["cita_id"], _solicitar(cliente)["cita_id"]
     cliente.post(f"/citas/{c1}/confirmar", headers=RECEPCION)
     sin_cupo = cliente.post(f"/citas/{c2}/confirmar", headers=RECEPCION)
-    assert sin_cupo.json()["error"]["motivos"] == ["CAPACIDAD_INSUFICIENTE:S1"]
+    assert motivos_de_error(sin_cupo) == ["CAPACIDAD_INSUFICIENTE:S1"]
     invalida = cliente.post(f"/citas/{c2}/realizar", headers=VETERINARIO)
-    assert invalida.json()["error"]["motivos"] == ["realizar desde SOLICITADA"]
+    assert motivos_de_error(invalida) == ["realizar desde SOLICITADA"]
 
 
 @pytest.mark.parametrize("backend", BACKENDS)
@@ -328,9 +330,10 @@ def test_toda_respuesta_de_error_tiene_el_mismo_formato(backend, tmp_path):
     ]
     assert [r.status_code for r in respuestas] == [404, 405, 401, 404, 400]
     for respuesta in respuestas:
-        assert set(respuesta.json()["error"]) == {"codigo", "mensaje", "detalles", "motivos"}
-    assert respuestas[0].json()["error"]["codigo"] == "RUTA_NO_ENCONTRADA"
-    assert respuestas[1].json()["error"]["codigo"] == "METODO_NO_PERMITIDO"
+        assert set(respuesta.json()["error"]) <= {"mensaje", "detalles"}  # sin códigos en el cuerpo
+        assert "mensaje" in respuesta.json()["error"] and codigo_de_error(respuesta)
+    assert codigo_de_error(respuestas[0]) == "RUTA_NO_ENCONTRADA"
+    assert codigo_de_error(respuestas[1]) == "METODO_NO_PERMITIDO"
 
 
 @pytest.mark.parametrize("backend", BACKENDS)
@@ -353,8 +356,7 @@ def test_el_contrato_openapi_documenta_evaluaciones_eventos_y_el_formato_de_erro
     esquemas = contrato["components"]["schemas"]
     assert {"ErrorOut", "CuerpoDeError", "CitaOut", "EvaluacionOut", "EventoOut"} <= set(esquemas)
     assert "HTTPValidationError" not in esquemas
-    assert set(esquemas["CuerpoDeError"]["properties"]) == {
-        "codigo", "mensaje", "detalles", "motivos"}
+    assert set(esquemas["CuerpoDeError"]["properties"]) == {"mensaje", "detalles"}
     confirmar = contrato["paths"]["/citas/{cita_id}/confirmar"]["post"]
     assert "ErrorOut" in str(confirmar["responses"]["409"])
     assert esquemas["CitaOut"]["properties"]["total_mxn"]["type"] == "string"
