@@ -7,6 +7,14 @@ erDiagram
   MASCOTAS ||--o{ VACUNACIONES : recibe
   ESQUEMAS_VACUNACION ||--o{ VACUNACIONES : "define seguimiento por vacuna_clave"
   MASCOTAS |o--o{ EMERGENCIAS : presenta
+  MASCOTAS ||--o{ NOTAS_CLINICAS : "tiene en su expediente"
+  CITAS |o--o{ NOTAS_CLINICAS : "origina (opcional)"
+  MASCOTAS ||--o{ HOSPITALIZACIONES : "es internada en"
+  HOSPITALIZACIONES ||--o{ LECTURAS_MONITOREO : "hoja de monitoreo"
+  MASCOTAS ||--o{ RECETAS : recibe
+  RECETAS ||--|{ RECETA_MEDICAMENTOS : incluye
+  MASCOTAS ||--o{ ORDENES_ESTUDIO : recibe
+  CITAS ||--o| COBROS : "se cobra una vez"
   PROPIETARIOS { text propietario_id PK
     text nombre
     int activo
@@ -53,6 +61,46 @@ erDiagram
     text estado
     text identificada_en
     text atendida_en }
+  NOTAS_CLINICAS { text nota_id PK
+    text mascota_id FK
+    text cita_id FK "opcional"
+    text diagnostico
+    text indicaciones
+    text registrada_en }
+  HOSPITALIZACIONES { text hospitalizacion_id PK
+    text mascota_id FK
+    text motivo
+    text estado
+    text ingresada_en
+    text alta_en
+    text resumen_alta }
+  LECTURAS_MONITOREO { text hospitalizacion_id PK
+    int orden PK
+    text registrada_en
+    text observaciones
+    text temperatura_c
+    int frecuencia_cardiaca }
+  RECETAS { text receta_id PK
+    text mascota_id FK
+    text cita_id FK "opcional"
+    text registrada_en }
+  RECETA_MEDICAMENTOS { text receta_id PK
+    int orden PK
+    text nombre
+    text dosis
+    text indicaciones }
+  ORDENES_ESTUDIO { text orden_id PK
+    text mascota_id FK
+    text cita_id FK "opcional"
+    text estudio
+    text indicaciones
+    text registrada_en }
+  COBROS { text cobro_id PK
+    text cita_id FK "unico"
+    text mascota_id FK
+    bigint total_centavos
+    text metodo
+    text cobrado_en }
   EVENTOS_DOMINIO { text evento
     text agregado_tipo
     text agregado_id

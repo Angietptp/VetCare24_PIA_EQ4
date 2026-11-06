@@ -4,8 +4,7 @@ Un evento está en pasado (CitaAgendada, no AgendarCita), es inmutable y lleva l
 necesitaría quien lo reciba. El dominio solo los crea; quién reacciona a ellos lo decide la
 capa de aplicación (application/despachador.py).
 
-Ya existen los de Cita, Vacunación (Etapa 9) y Emergencia (Etapa 10). Los de Hospitalización y
-Nota clínica (D-14) llegan cuando existan esas entidades en el dominio.
+Existen los de Cita, Vacunación, Emergencia, Nota clínica (CU-02) y Hospitalización (CU-04).
 """
 
 from __future__ import annotations
@@ -142,3 +141,91 @@ class EmergenciaIdentificada(EventoDeDominio):
     emergencia_id: str
     mascota_id: str | None  # P3: la mascota puede no estar registrada
     motivo: str
+
+
+@dataclass(frozen=True)
+class NotaClinicaRegistrada(EventoDeDominio):
+    """Se guardó una nota en el expediente de la mascota (CU-02, NB-10)."""
+
+    AGREGADO: ClassVar[str] = "NotaClinica"
+    CAMPO_ID: ClassVar[str] = "nota_id"
+
+    nota_id: str
+    mascota_id: str
+    cita_id: str | None
+
+
+@dataclass(frozen=True)
+class HospitalizacionIniciada(EventoDeDominio):
+    """La mascota fue ingresada a hospitalización (CU-04, NB-18)."""
+
+    AGREGADO: ClassVar[str] = "Hospitalizacion"
+    CAMPO_ID: ClassVar[str] = "hospitalizacion_id"
+
+    hospitalizacion_id: str
+    mascota_id: str
+    motivo: str
+
+
+@dataclass(frozen=True)
+class HospitalizacionFinalizada(EventoDeDominio):
+    """La mascota fue dada de alta; `lecturas` es el número de anotaciones de monitoreo."""
+
+    AGREGADO: ClassVar[str] = "Hospitalizacion"
+    CAMPO_ID: ClassVar[str] = "hospitalizacion_id"
+
+    hospitalizacion_id: str
+    mascota_id: str
+    lecturas: int
+
+
+@dataclass(frozen=True)
+class RecetaEmitida(EventoDeDominio):
+    """El veterinario emitió una receta (US13)."""
+
+    AGREGADO: ClassVar[str] = "Receta"
+    CAMPO_ID: ClassVar[str] = "receta_id"
+
+    receta_id: str
+    mascota_id: str
+    medicamentos: int
+    cita_id: str | None
+
+
+@dataclass(frozen=True)
+class OrdenDeEstudioEmitida(EventoDeDominio):
+    """El veterinario emitió una orden de estudio (US14)."""
+
+    AGREGADO: ClassVar[str] = "OrdenDeEstudio"
+    CAMPO_ID: ClassVar[str] = "orden_id"
+
+    orden_id: str
+    mascota_id: str
+    estudio: str
+    cita_id: str | None
+
+
+@dataclass(frozen=True)
+class CobroRegistrado(EventoDeDominio):
+    """Recepción cobró una cita realizada (US10). El importe viaja como texto decimal."""
+
+    AGREGADO: ClassVar[str] = "Cobro"
+    CAMPO_ID: ClassVar[str] = "cobro_id"
+
+    cobro_id: str
+    cita_id: str
+    mascota_id: str
+    total: Money
+    metodo: str
+
+
+@dataclass(frozen=True)
+class DocumentacionEntregada(EventoDeDominio):
+    """Recepción entregó al propietario la documentación de una cita cobrada (BPMN)."""
+
+    AGREGADO: ClassVar[str] = "Cita"
+    CAMPO_ID: ClassVar[str] = "cita_id"
+
+    cita_id: str
+    propietario_id: str
+    mascota_id: str

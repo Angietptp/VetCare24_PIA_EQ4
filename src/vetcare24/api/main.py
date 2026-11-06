@@ -20,7 +20,11 @@ from vetcare24.api.rutas import router
 from vetcare24.application.despachador import Despachador, RegistroDeEventos
 from vetcare24.application.errores import ErrorDeAplicacion
 from vetcare24.application.servicios import ServicioDeCitas, ServicioDeRegistro
+from vetcare24.application.servicios_cobro import ServicioDeCobro
 from vetcare24.application.servicios_emergencias import ServicioDeEmergencias
+from vetcare24.application.servicios_expediente import ServicioDeExpediente
+from vetcare24.application.servicios_hospitalizacion import ServicioDeHospitalizacion
+from vetcare24.application.servicios_reportes import ServicioDeReportes
 from vetcare24.application.servicios_vacunacion import ServicioDeVacunacion
 from vetcare24.domain.errors import ErrorDeDominio
 from vetcare24.domain.eventos import EventoDeDominio
@@ -32,7 +36,9 @@ from vetcare24.infrastructure.repositorios_sql import UnidadDeTrabajoSql
 
 DESCRIPCION = (
     "Lógica de negocio de la clínica veterinaria VetCare 24 (CU-01: registrar y gestionar "
-    "citas; CU-03: vacunación; CU-05: emergencias sin cita). Cada solicitud indica el rol "
+    "citas y su cobro; CU-02: expediente clínico, recetas y órdenes de estudio; "
+    "CU-03: vacunación; CU-04: hospitalización; reportes de operación; "
+    "CU-05: emergencias sin cita). Cada solicitud indica el rol "
     "en el encabezado `X-Rol`. "
     "Errores (siempre con "
     "`error.codigo`, `error.mensaje`, `error.detalles` y `error.motivos`): 400 solicitud mal "
@@ -87,6 +93,10 @@ def create_app(database_url: str | None = None, *, preparar_esquema: bool = True
     app.state.vacunacion = ServicioDeVacunacion(fabrica, despachador)
     app.state.notificador = BandejaDeAvisos()
     app.state.emergencias = ServicioDeEmergencias(fabrica, despachador, app.state.notificador)
+    app.state.expediente = ServicioDeExpediente(fabrica, despachador)
+    app.state.hospitalizacion = ServicioDeHospitalizacion(fabrica, despachador)
+    app.state.cobro = ServicioDeCobro(fabrica, despachador)
+    app.state.reportes = ServicioDeReportes(fabrica)
 
     for tipo in (ErrorDeDominio, ErrorDeAplicacion, RolNoIndicado, RolDesconocido):
         app.add_exception_handler(tipo, _manejar_error_de_negocio)

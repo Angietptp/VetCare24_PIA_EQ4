@@ -17,14 +17,15 @@ Cada fila une una necesidad o regla del BRD con sus historias de usuario, el com
 | NB-19, R-06, S-08, CR-8 | US20 | CU-05 | `ServicioDeEmergencias.atender_emergencia`, `Emergencia`, `CicloDeVidaDeEmergencia` | `test_servicios_emergencias.py::test_emergencia_sin_cita_se_registra`, `test_emergencia.py`, `test_api_emergencias.py::test_los_20_escenarios_del_recorrido_coinciden` | ADR-01, ADR-02 | Implementada |
 | NB-19 (notificar al veterinario) | US20 | CU-05 | Puerto `NotificadorDeVeterinario`, `BandejaDeAvisos` | `test_servicios_emergencias.py::test_notifica_veterinario_tras_confirmar`, `::test_si_la_notificacion_falla_el_registro_se_conserva` | ADR-02 | Implementada |
 | R-06 (atención permitida) | US20 | CU-05 | `atencion_permitida = TieneCitaConfirmada OR TieneEmergenciaActiva`, `GET /mascotas/{id}/evaluaciones/atencion` | `test_specification.py::test_or_exige_al_menos_una`, `test_servicios_emergencias.py` | ADR-01 | Implementada |
-| Eventos de dominio (D-14) | Transversal | CU-01, CU-03, CU-05 | `eventos`, `Despachador`, tabla `eventos_dominio` | `test_eventos.py`, `test_despachador.py`, `test_eventos_ciclo.py` | ADR-02 | Implementada (eventos de Cita, Vacunación y Emergencia) |
+| Eventos de dominio (D-14) | Transversal | CU-01 a CU-05 | `eventos`, `Despachador`, tabla `eventos_dominio` | `test_eventos.py`, `test_despachador.py`, `test_eventos_ciclo.py` | ADR-02 | Implementada (eventos de Cita, Vacunación, Emergencia, Nota clínica, Hospitalización, Receta, Orden de estudio, Cobro y Documentación) |
 | Una transacción por caso de uso | Transversal | Todos | `UnidadDeTrabajoSql` | `test_servicios_de_aplicacion.py`, `test_base_de_datos.py` | ADR-02 | Implementada |
 | Contrato de errores HTTP (D-13) | Transversal | Todos | `errores_http`, `main.py` | `test_api_errores.py`, `test_api.py` | ADR-06 | Implementada |
 | Paquete del profesor: 60 operaciones, 120 casos, 20 transiciones | — | CU-01 | `csv_loader`, `adaptador_paquete`, `sembrado`, oráculo independiente | `test_csv_loader.py`, `test_adaptador_paquete.py`, `test_oraculo.py`, `test_api_paquete.py`, `test_u5_matriz.py` | ADR-08 | Implementada |
-| NB-10, NB-11, NB-12, NB-13, R-02, R-03 | US03, US11, US12, US13, US14, US16 | CU-02 | `ExpedienteClinico`, `NotaClinica` (diseño) | — | ADR-04, ADR-09 | **Fuera del alcance implementado** |
-| NB-18, R-04, R-08 | US17, US18, US19 | CU-04 | `Hospitalizacion` (diseño) | — | ADR-09 | **Fuera del alcance implementado** |
-| NB-21 | — | — | Reportes | — | ADR-09 | **Fuera del alcance implementado** |
-| Cobro de servicios | US10 | — | Solo se calcula el total (`Money`, D-02); el cobro y la facturación fiscal quedan fuera (A-02) | `test_money.py` | — | Parcial (total calculado) |
+| NB-10, NB-11, NB-12, R-02, R-03 | US03, US11, US12 | CU-02 | `ServicioDeExpediente`, `NotaClinica`, `RegistroClinico`, `POST /mascotas/{id}/notas-clinicas`, `GET /mascotas/{id}/expediente` | `test_expediente.py::test_registrar_nota_la_guarda_y_publica_el_evento`, `::test_el_expediente_lista_las_notas_en_orden_cronologico`, `::test_permisos_del_expediente`, `test_api_clinica.py::test_nota_clinica_y_expediente` | ADR-04, ADR-09 | Implementada (O-01, O-02, O-06) |
+| NB-13, R-02 | US13, US14 | CU-02 | `Receta`, `OrdenDeEstudio`, `EmisorDeDocumentos`, `POST /mascotas/{id}/recetas`, `POST /mascotas/{id}/ordenes-estudio` | `test_cobro_y_documentos.py::test_receta_y_orden_se_guardan_y_aparecen_en_el_expediente`, `::test_receta_y_orden_ligadas_a_una_cita_realizada`, `test_api_clinica.py::test_recetas_y_ordenes_por_http` | ADR-09 | Implementada (O-10) |
+| NB-18, R-04, R-08 | US17, US18, US19 | CU-04 | `ServicioDeHospitalizacion`, `Hospitalizacion`, `CicloDeVidaDeHospitalizacion`, `LecturaDeMonitoreo`, `POST /hospitalizaciones`, `.../monitoreo`, `.../alta` | `test_hospitalizacion.py::test_ciclo_completo_en_el_dominio`, `::test_hoja_de_monitoreo_y_alta_se_conservan`, `::test_transiciones_invalidas_tras_el_alta`, `test_api_clinica.py::test_ciclo_de_hospitalizacion_por_http` | ADR-01, ADR-09 | Implementada (O-03 a O-06) |
+| NB-21 | — | — | `ServicioDeReportes`, `GET /reportes/operacion` | `test_cobro_y_documentos.py::test_reporte_de_operacion_cuenta_lo_registrado`, `test_api_clinica.py::test_reporte_de_operacion_por_http` | ADR-09 | Implementada (O-13) |
+| Cobro y entrega de documentación (BPMN) | US10 | — | `Cobro`, `RegistroDeCobros`, `ServicioDeCobro`, `POST /citas/{id}/cobro`, `POST /citas/{id}/documentacion` | `test_cobro_y_documentos.py::test_cobrar_una_cita_realizada_usa_el_total_vigente`, `::test_no_se_cobra_una_cita_no_realizada_ni_dos_veces`, `::test_entregar_documentacion_reune_cobro_notas_recetas_y_ordenes`, `test_api_clinica.py::test_cobro_y_entrega_de_documentacion_por_http`, `test_money.py` | ADR-09 | Implementada (O-11, O-12; sin factura fiscal, A-02) |
 
 ## Estado por historia de usuario
 
@@ -32,21 +33,21 @@ Cada fila une una necesidad o regla del BRD con sus historias de usuario, el com
 |---|---|---|---|
 | US01 | Registrar mascota | Implementada | `POST /mascotas` |
 | US02 | Registrar múltiples mascotas | Implementada | `POST /mascotas` (varias por propietario) |
-| US03 | Consultar expediente (propietario) | Parcial | `GET /mascotas/{id}`, `GET /mascotas/{id}/vacunaciones` |
+| US03 | Consultar expediente (propietario) | Implementada | `GET /mascotas/{id}/expediente` (rol responsable), `GET /mascotas/{id}/vacunaciones` |
 | US04 | Solicitar cita | Implementada | `POST /citas` y ciclo completo |
 | US05 | Recordatorios | Parcial (solo vacunas, sin envío) | `GET /vacunas/proximas` |
 | US06 | Recepción registra datos de mascota | Implementada (alta) | `POST /mascotas` |
 | US07 | Consultar citas programadas | Implementada | `GET /citas` |
 | US08 | Registrar peso al llegar | Parcial (peso como dato de la mascota) | `Mascota.peso_kg` |
 | US09 | Registrar motivo de consulta | Fuera del alcance implementado (el motivo existe solo en emergencias) | — |
-| US10 | Registrar cobro | Fuera del alcance implementado (total calculado) | `Money` |
-| US11 | Veterinario consulta expediente | Parcial (mascota y vacunas) | `GET /mascotas/{id}` |
-| US12 | Registrar nota clínica | **Fuera del alcance implementado (CU-02)** | — |
-| US13 | Registrar receta | Fuera del alcance implementado | — |
-| US14 | Órdenes de estudios | Fuera del alcance implementado | — |
+| US10 | Registrar cobro | Implementada | `POST /citas/{id}/cobro` |
+| US11 | Veterinario consulta expediente | Implementada | `GET /mascotas/{id}/expediente` |
+| US12 | Registrar nota clínica | Implementada | `POST /mascotas/{id}/notas-clinicas` |
+| US13 | Registrar receta | Implementada | `POST /mascotas/{id}/recetas` |
+| US14 | Órdenes de estudios | Implementada | `POST /mascotas/{id}/ordenes-estudio` |
 | US15 | Registrar vacunas | Implementada | `POST /mascotas/{id}/vacunaciones` |
 | US16 | Consultar alergias | Parcial (atributo de la mascota) | `Mascota.alergias` |
-| US17 | Ingreso a hospitalización | **Fuera del alcance implementado (CU-04)** | — |
-| US18 | Hoja de monitoreo | **Fuera del alcance implementado (CU-04)** | — |
-| US19 | Evolución del hospitalizado | **Fuera del alcance implementado (CU-04)** | — |
+| US17 | Ingreso a hospitalización | Implementada | `POST /hospitalizaciones` |
+| US18 | Hoja de monitoreo | Implementada | `POST /hospitalizaciones/{id}/monitoreo` |
+| US19 | Evolución del hospitalizado | Implementada (las lecturas de la hoja registran la evolución) | `POST /hospitalizaciones/{id}/monitoreo`, `GET /hospitalizaciones/{id}` |
 | US20 | Atender una emergencia | Implementada | `POST /emergencias` |

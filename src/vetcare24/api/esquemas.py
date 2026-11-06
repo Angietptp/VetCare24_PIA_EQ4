@@ -13,8 +13,12 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt
 
 from vetcare24.domain.catalogo import ServicioVeterinario
 from vetcare24.domain.cita import Cita
+from vetcare24.domain.cobro import Cobro
+from vetcare24.domain.documentos_clinicos import OrdenDeEstudio, Receta
 from vetcare24.domain.emergencia import Emergencia
+from vetcare24.domain.hospitalizacion import Hospitalizacion
 from vetcare24.domain.mascota import Mascota
+from vetcare24.domain.nota_clinica import NotaClinica
 from vetcare24.domain.propietario import Propietario
 from vetcare24.domain.seguimiento_vacunacion import SeguimientoDeVacuna
 from vetcare24.domain.vacunacion import EsquemaDeVacunacion, Vacunacion
@@ -228,6 +232,139 @@ class EmergenciaRegistradaOut(BaseModel):
                     "falló. El registro se conserva en ambos casos.")
 
 
+class NotaClinicaIn(Entrada):
+    diagnostico: str = Field(examples=["Otitis externa en oído izquierdo"])
+    indicaciones: str | None = Field(
+        None, examples=["Limpieza ótica cada 12 horas durante 7 días"])
+    cita_id: str | None = Field(
+        None, description="Opcional: cita REALIZADA de la misma mascota en la que se generó.")
+    nota_id: str | None = Field(None, description="Opcional; si no se indica, se genera.")
+
+
+class NotaClinicaOut(BaseModel):
+    nota_id: str
+    mascota_id: str
+    cita_id: str | None
+    diagnostico: str
+    indicaciones: str | None
+    registrada_en: datetime = Field(description="Fecha y hora con zona horaria.")
+
+
+class MedicamentoIn(Entrada):
+    nombre: str = Field(examples=["Amoxicilina"])
+    dosis: str = Field(examples=["250 mg cada 12 horas"])
+    indicaciones: str | None = Field(None, examples=["Durante 7 días con alimento"])
+
+
+class RecetaIn(Entrada):
+    medicamentos: list[MedicamentoIn] = Field(description="Al menos uno.")
+    cita_id: str | None = Field(None, description="Opcional: cita REALIZADA de la mascota.")
+    receta_id: str | None = Field(None, description="Opcional; si no, se genera.")
+
+
+class RecetaOut(BaseModel):
+    receta_id: str
+    mascota_id: str
+    cita_id: str | None
+    medicamentos: list[MedicamentoIn]
+    registrada_en: datetime
+
+
+class OrdenEstudioIn(Entrada):
+    estudio: str = Field(examples=["Biometría hemática"])
+    indicaciones: str | None = Field(None, examples=["Ayuno de 8 horas"])
+    cita_id: str | None = Field(None, description="Opcional: cita REALIZADA de la mascota.")
+    orden_id: str | None = Field(None, description="Opcional; si no, se genera.")
+
+
+class OrdenEstudioOut(BaseModel):
+    orden_id: str
+    mascota_id: str
+    cita_id: str | None
+    estudio: str
+    indicaciones: str | None
+    registrada_en: datetime
+
+
+class CobroIn(Entrada):
+    metodo: str = Field(
+        examples=["tarjeta"], description="`efectivo`, `tarjeta` o `transferencia`.",
+    )
+    cobro_id: str | None = Field(None, description="Opcional; si no, se genera.")
+
+
+class CobroOut(BaseModel):
+    cobro_id: str
+    cita_id: str
+    mascota_id: str
+    total_mxn: str = Field(examples=["900.00"])
+    metodo: str
+    cobrado_en: datetime
+
+
+class DocumentacionOut(BaseModel):
+    cita_id: str
+    propietario_id: str
+    mascota_id: str
+    cobro: CobroOut
+    notas: list[NotaClinicaOut]
+    recetas: list[RecetaOut]
+    ordenes_de_estudio: list[OrdenEstudioOut]
+
+
+class ReporteOperacionOut(BaseModel):
+    generado_en: datetime
+    citas_por_estado: dict[str, int]
+    emergencias_por_estado: dict[str, int]
+    hospitalizaciones_por_estado: dict[str, int]
+    cobros_registrados: int
+    ingresos_mxn: str = Field(examples=["900.00"], description="Suma de los cobros registrados.")
+    ingresos_por_metodo: dict[str, str]
+    recetas_emitidas: int
+    ordenes_de_estudio_emitidas: int
+
+
+class ExpedienteOut(BaseModel):
+    mascota_id: str
+    notas: list[NotaClinicaOut] = Field(description="De la más antigua a la más reciente.")
+    recetas: list[RecetaOut] = []
+    ordenes_de_estudio: list[OrdenEstudioOut] = []
+
+
+class HospitalizacionIn(Entrada):
+    mascota_id: str
+    motivo: str = Field(examples=["Deshidratación severa; requiere suero intravenoso"])
+    hospitalizacion_id: str | None = Field(None, description="Opcional; si no, se genera.")
+
+
+class MonitoreoIn(Entrada):
+    observaciones: str = Field(examples=["Responde al estímulo; tolera el suero"])
+    temperatura_c: Decimal | None = Field(None, examples=["38.6"], description="Entre 25 y 45.")
+    frecuencia_cardiaca: StrictInt | None = Field(None, examples=[110], description="1 a 400.")
+
+
+class AltaIn(Entrada):
+    resumen_alta: str = Field(examples=["Estable, tolera alimento; control en 48 horas"])
+
+
+class LecturaOut(BaseModel):
+    registrada_en: datetime
+    observaciones: str
+    temperatura_c: str | None
+    frecuencia_cardiaca: int | None
+
+
+class HospitalizacionOut(BaseModel):
+    hospitalizacion_id: str
+    mascota_id: str
+    motivo: str
+    estado: str = Field(examples=["INGRESADA"], description="`INGRESADA` o `ALTA`.")
+    ingresada_en: datetime
+    alta_en: datetime | None
+    resumen_alta: str | None
+    hoja_de_monitoreo: list[LecturaOut]
+
+
 class AvisoOut(BaseModel):
     emergencia_id: str
     mascota_id: str | None
@@ -299,3 +436,43 @@ def emergencia_a_salida(e: Emergencia) -> EmergenciaOut:
         emergencia_id=e.emergencia_id, mascota_id=e.mascota_id, motivo=e.motivo,
         datos_paciente=e.datos_paciente, estado=e.estado.value,
         identificada_en=e.identificada_en, atendida_en=e.atendida_en)
+
+
+def nota_a_salida(n: NotaClinica) -> NotaClinicaOut:
+    return NotaClinicaOut(
+        nota_id=n.nota_id, mascota_id=n.mascota_id, cita_id=n.cita_id,
+        diagnostico=n.diagnostico, indicaciones=n.indicaciones, registrada_en=n.registrada_en)
+
+
+def hospitalizacion_a_salida(h: Hospitalizacion) -> HospitalizacionOut:
+    return HospitalizacionOut(
+        hospitalizacion_id=h.hospitalizacion_id, mascota_id=h.mascota_id, motivo=h.motivo,
+        estado=h.estado.value, ingresada_en=h.ingresada_en, alta_en=h.alta_en,
+        resumen_alta=h.resumen_alta,
+        hoja_de_monitoreo=[
+            LecturaOut(
+                registrada_en=lectura.registrada_en, observaciones=lectura.observaciones,
+                temperatura_c=str(lectura.temperatura_c) if lectura.temperatura_c is not None
+                else None,
+                frecuencia_cardiaca=lectura.frecuencia_cardiaca)
+            for lectura in h.lecturas])
+
+
+def receta_a_salida(r: Receta) -> RecetaOut:
+    return RecetaOut(
+        receta_id=r.receta_id, mascota_id=r.mascota_id, cita_id=r.cita_id,
+        medicamentos=[MedicamentoIn(nombre=m.nombre, dosis=m.dosis, indicaciones=m.indicaciones)
+                      for m in r.medicamentos],
+        registrada_en=r.registrada_en)
+
+
+def orden_a_salida(o: OrdenDeEstudio) -> OrdenEstudioOut:
+    return OrdenEstudioOut(
+        orden_id=o.orden_id, mascota_id=o.mascota_id, cita_id=o.cita_id, estudio=o.estudio,
+        indicaciones=o.indicaciones, registrada_en=o.registrada_en)
+
+
+def cobro_a_salida(c: Cobro) -> CobroOut:
+    return CobroOut(
+        cobro_id=c.cobro_id, cita_id=c.cita_id, mascota_id=c.mascota_id,
+        total_mxn=str(c.total.monto), metodo=c.metodo.value, cobrado_en=c.cobrado_en)

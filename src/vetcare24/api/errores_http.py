@@ -41,13 +41,28 @@ PERMISOS_LEGIBLES = {
     "atender_emergencia": "registrar emergencias",
     "iniciar_atencion_emergencia": "iniciar la atención de emergencias",
     "consultar_emergencia": "consultar emergencias",
+    "registrar_nota_clinica": "registrar notas clínicas",
+    "consultar_expediente": "consultar el expediente clínico",
+    "ingresar_hospitalizacion": "ingresar mascotas a hospitalización",
+    "monitorear_hospitalizacion": "registrar el monitoreo de una hospitalización",
+    "dar_alta_hospitalizacion": "dar de alta una hospitalización",
+    "consultar_hospitalizacion": "consultar hospitalizaciones",
+    "emitir_receta": "emitir recetas", "emitir_orden_estudio": "emitir órdenes de estudio",
+    "registrar_cobro": "registrar cobros", "consultar_cobro": "consultar cobros",
+    "entregar_documentacion": "entregar la documentación",
+    "consultar_reportes": "consultar los reportes de operación",
 }
 ARTICULOS = {
     "cita": ("la", "una"), "mascota": ("la", "una"), "vacunación": ("la", "una"),
-    "emergencia": ("la", "una"),
+    "emergencia": ("la", "una"), "nota clínica": ("la", "una"),
+    "hospitalización": ("la", "una"), "receta": ("la", "una"),
+    "orden de estudio": ("la", "una"), "cobro": ("el", "un"), "documentación": ("la", "una"),
 }
-ACCIONES_LEGIBLES = {"iniciar_atencion": "iniciar la atención de"}
-ESTADOS_LEGIBLES = {"EN_ATENCION": "en atención"}  # por omisión: el / un
+ACCIONES_LEGIBLES = {
+    "iniciar_atencion": "iniciar la atención de",
+    "registrar_monitoreo": "registrar monitoreo en", "dar_alta": "dar de alta",
+}
+ESTADOS_LEGIBLES = {"EN_ATENCION": "en atención", "ALTA": "dada de alta"}  # por omisión: el / un
 MOTIVOS = {  # motivo de la regla -> frase ("{x}" es el servicio, si lo hay)
     "CAPACIDAD_INSUFICIENTE": "no hay capacidad suficiente para el servicio {x}",
     "SERVICIO_DESHABILITADO": "el servicio {x} no está disponible por el momento",
@@ -60,6 +75,11 @@ MOTIVOS = {  # motivo de la regla -> frase ("{x}" es el servicio, si lo hay)
     "NO_PREFERENTE": "el propietario no es cliente preferente",
     "SIN_PROMOCION": "no hay una promoción activa",
     "TOTAL_INSUFICIENTE": "el total no alcanza el mínimo requerido",
+    "CITA_DE_OTRA_MASCOTA": "la cita pertenece a otra mascota",
+    "CITA_NO_REALIZADA": "la cita aún no está realizada",
+    "MASCOTA_YA_HOSPITALIZADA": "la mascota ya tiene una hospitalización ingresada",
+    "CITA_YA_COBRADA": "la cita ya fue cobrada",
+    "CITA_SIN_COBRO": "la cita aún no se ha cobrado",
 }
 INVARIANTES = {  # código de la violación -> frase (se usa {x} con el id que trae el mensaje)
     "DETALLE_VACIO": "La cita debe incluir al menos un servicio.",
@@ -74,6 +94,17 @@ INVARIANTES = {  # código de la violación -> frase (se usa {x} con el id que t
     "VENTANA_INVALIDA": "Los días de anticipación deben ser un número entero de 0 o más.",
     "MOTIVO_VACIO": "Falta indicar el motivo.",
     "DATOS_PACIENTE_VACIOS": "Si se indican los datos del paciente, no pueden estar en blanco.",
+    "DIAGNOSTICO_VACIO": "Falta indicar el diagnóstico.",
+    "INDICACIONES_VACIAS": "Si se indican las indicaciones, no pueden estar en blanco.",
+    "OBSERVACIONES_VACIAS": "Faltan las observaciones del monitoreo.",
+    "RESUMEN_ALTA_VACIO": "Falta el resumen de alta.",
+    "TEMPERATURA_INVALIDA": "La temperatura debe estar entre 25 y 45 °C.",
+    "RECETA_SIN_MEDICAMENTOS": "La receta debe incluir al menos un medicamento.",
+    "MEDICAMENTO_VACIO": "Falta el nombre del medicamento.",
+    "DOSIS_VACIA": "Falta la dosis del medicamento.",
+    "ESTUDIO_VACIO": "Falta indicar el estudio.",
+    "METODO_INVALIDO": "El método de pago debe ser efectivo, tarjeta o transferencia.",
+    "FRECUENCIA_INVALIDA": "La frecuencia cardiaca debe estar entre 1 y 400 latidos por minuto.",
 }
 PISTAS = {("SOLICITADA", "realizar"): " Primero debe confirmarse."}
 TIPOS_DE_CAMPO = {  # tipo de error de validación -> cómo se dice

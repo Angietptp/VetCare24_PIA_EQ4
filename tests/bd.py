@@ -19,7 +19,11 @@ import pytest
 from vetcare24.application.despachador import Despachador, RegistroDeEventos
 from vetcare24.application.puertos import NotificadorDeVeterinario
 from vetcare24.application.servicios import ServicioDeCitas, ServicioDeRegistro
+from vetcare24.application.servicios_cobro import ServicioDeCobro
 from vetcare24.application.servicios_emergencias import ServicioDeEmergencias
+from vetcare24.application.servicios_expediente import ServicioDeExpediente
+from vetcare24.application.servicios_hospitalizacion import ServicioDeHospitalizacion
+from vetcare24.application.servicios_reportes import ServicioDeReportes
 from vetcare24.application.servicios_vacunacion import ServicioDeVacunacion
 from vetcare24.domain.catalogo import ServicioVeterinario
 from vetcare24.domain.emergencia import Emergencia
@@ -99,6 +103,10 @@ class Entorno:
     fabrica: Callable[[], UnidadDeTrabajoSql]
     vacunacion: ServicioDeVacunacion
     emergencias: ServicioDeEmergencias
+    expediente: ServicioDeExpediente
+    hospitalizacion: ServicioDeHospitalizacion
+    cobro: ServicioDeCobro
+    reportes: ServicioDeReportes
     reloj: RelojDePrueba
     notificador: NotificadorDePrueba
 
@@ -151,4 +159,8 @@ def armar(url: str) -> Entorno:
         ServicioDeVacunacion(fabrica, despachador, reloj=lambda: HORA, generar_id=generar),
         ServicioDeEmergencias(fabrica, despachador, notificador, reloj=reloj,
                               generar_id=generar),
+        ServicioDeExpediente(fabrica, despachador, reloj=reloj, generar_id=generar),
+        ServicioDeHospitalizacion(fabrica, despachador, reloj=reloj, generar_id=generar),
+        ServicioDeCobro(fabrica, despachador, reloj=reloj, generar_id=generar),
+        ServicioDeReportes(fabrica, reloj=reloj),
         reloj, notificador)

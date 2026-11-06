@@ -15,21 +15,34 @@ from typing import Any
 from vetcare24.application.errores import NoEncontrado
 from vetcare24.application.puertos import (
     RepositorioDeCitas,
+    RepositorioDeCobros,
     RepositorioDeEmergencias,
     RepositorioDeEsquemas,
     RepositorioDeEventos,
+    RepositorioDeHospitalizaciones,
     RepositorioDeMascotas,
+    RepositorioDeNotas,
+    RepositorioDeOrdenes,
     RepositorioDePropietarios,
+    RepositorioDeRecetas,
     RepositorioDeServicios,
     RepositorioDeVacunaciones,
     UnidadDeTrabajo,
 )
 from vetcare24.domain.catalogo import ServicioVeterinario
 from vetcare24.domain.cita import Cita, EstadoCita, ServicioSolicitado
+from vetcare24.domain.cobro import Cobro, MetodoDePago
+from vetcare24.domain.documentos_clinicos import Medicamento, OrdenDeEstudio, Receta
 from vetcare24.domain.emergencia import Emergencia, EstadoEmergencia
 from vetcare24.domain.eventos import EventoDeDominio
+from vetcare24.domain.hospitalizacion import (
+    EstadoHospitalizacion,
+    Hospitalizacion,
+    LecturaDeMonitoreo,
+)
 from vetcare24.domain.mascota import Mascota
 from vetcare24.domain.money import Money
+from vetcare24.domain.nota_clinica import NotaClinica
 from vetcare24.domain.propietario import Propietario
 from vetcare24.domain.vacunacion import EsquemaDeVacunacion, Vacunacion
 from vetcare24.infrastructure.base_de_datos import Conexion, conectar
@@ -356,6 +369,233 @@ class RepositorioDeEmergenciasSql(RepositorioDeEmergencias):
         return [self._de_fila(fila) for fila in filas]
 
 
+class RepositorioDeNotasSql(RepositorioDeNotas):
+    _COLUMNAS = "nota_id, mascota_id, cita_id, diagnostico, indicaciones, registrada_en"
+
+    def __init__(self, conexion: Conexion) -> None:
+        self._con = conexion
+
+    def agregar(self, nota: NotaClinica) -> None:
+        self._con.ejecutar(
+            f"INSERT INTO notas_clinicas ({self._COLUMNAS}) VALUES (?, ?, ?, ?, ?, ?)",
+            (nota.nota_id, nota.mascota_id, nota.cita_id, nota.diagnostico, nota.indicaciones,
+             _texto(nota.registrada_en)))
+
+    @staticmethod
+    def _de_fila(fila: tuple[Any, ...]) -> NotaClinica:
+        return NotaClinica(
+            nota_id=fila[0], mascota_id=fila[1], cita_id=fila[2], diagnostico=fila[3],
+            indicaciones=fila[4], registrada_en=datetime.fromisoformat(fila[5]))
+
+    def obtener(self, nota_id: str) -> NotaClinica | None:
+        filas = self._con.consultar(
+            f"SELECT {self._COLUMNAS} FROM notas_clinicas WHERE nota_id = ?", (nota_id,))
+        return self._de_fila(filas[0]) if filas else None
+
+    def listar(self, *, mascota_id: str) -> list[NotaClinica]:
+        filas = self._con.consultar(
+            f"SELECT {self._COLUMNAS} FROM notas_clinicas WHERE mascota_id = ?"
+            " ORDER BY registrada_en, nota_id", (mascota_id,))
+        return [self._de_fila(fila) for fila in filas]
+
+
+class RepositorioDeHospitalizacionesSql(RepositorioDeHospitalizaciones):
+    _COLUMNAS = ("hospitalizacion_id, mascota_id, motivo, estado, ingresada_en, alta_en,"
+                 " resumen_alta")
+
+    def __init__(self, conexion: Conexion) -> None:
+        self._con = conexion
+
+    def agregar(self, hospitalizacion: Hospitalizacion) -> None:
+        h = hospitalizacion
+        self._con.ejecutar(
+            f"INSERT INTO hospitalizaciones ({self._COLUMNAS}) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (h.hospitalizacion_id, h.mascota_id, h.motivo, h.estado.value,
+             _texto(h.ingresada_en), _texto(h.alta_en), h.resumen_alta))
+        self._guardar_lecturas(h)
+
+    def guardar(self, hospitalizacion: Hospitalizacion) -> None:
+        h = hospitalizacion
+        if not self._con.consultar(
+                "SELECT 1 FROM hospitalizaciones WHERE hospitalizacion_id = ?",
+                (h.hospitalizacion_id,)):
+            raise NoEncontrado("hospitalización", h.hospitalizacion_id)
+        self._con.ejecutar(
+            "UPDATE hospitalizaciones SET estado = ?, alta_en = ?, resumen_alta = ?"
+            " WHERE hospitalizacion_id = ?",
+            (h.estado.value, _texto(h.alta_en), h.resumen_alta, h.hospitalizacion_id))
+        self._con.ejecutar(
+            "DELETE FROM lecturas_monitoreo WHERE hospitalizacion_id = ?",
+            (h.hospitalizacion_id,))
+        self._guardar_lecturas(h)
+
+    def _guardar_lecturas(self, h: Hospitalizacion) -> None:
+        for orden, lectura in enumerate(h.lecturas, start=1):
+            self._con.ejecutar(
+                "INSERT INTO lecturas_monitoreo (hospitalizacion_id, orden, registrada_en,"
+                " observaciones, temperatura_c, frecuencia_cardiaca) VALUES (?, ?, ?, ?, ?, ?)",
+                (h.hospitalizacion_id, orden, _texto(lectura.registrada_en),
+                 lectura.observaciones,
+                 str(lectura.temperatura_c) if lectura.temperatura_c is not None else None,
+                 lectura.frecuencia_cardiaca))
+
+    def _de_fila(self, fila: tuple[Any, ...]) -> Hospitalizacion:
+        lecturas = tuple(
+            LecturaDeMonitoreo(
+                registrada_en=datetime.fromisoformat(registrada), observaciones=observaciones,
+                temperatura_c=Decimal(temperatura) if temperatura is not None else None,
+                frecuencia_cardiaca=int(frecuencia) if frecuencia is not None else None)
+            for registrada, observaciones, temperatura, frecuencia in self._con.consultar(
+                "SELECT registrada_en, observaciones, temperatura_c, frecuencia_cardiaca"
+                " FROM lecturas_monitoreo WHERE hospitalizacion_id = ? ORDER BY orden",
+                (fila[0],)))
+        return Hospitalizacion(
+            hospitalizacion_id=fila[0], mascota_id=fila[1], motivo=fila[2],
+            estado=EstadoHospitalizacion(fila[3]), ingresada_en=datetime.fromisoformat(fila[4]),
+            alta_en=_momento(fila[5]), resumen_alta=fila[6], lecturas=lecturas)
+
+    def obtener(self, hospitalizacion_id: str) -> Hospitalizacion | None:
+        filas = self._con.consultar(
+            f"SELECT {self._COLUMNAS} FROM hospitalizaciones WHERE hospitalizacion_id = ?",
+            (hospitalizacion_id,))
+        return self._de_fila(filas[0]) if filas else None
+
+    def listar(
+        self, *, estado: EstadoHospitalizacion | None = None, mascota_id: str | None = None
+    ) -> list[Hospitalizacion]:
+        condiciones: list[str] = []
+        parametros: list[Any] = []
+        if estado is not None:
+            condiciones.append("estado = ?")
+            parametros.append(estado.value)
+        if mascota_id is not None:
+            condiciones.append("mascota_id = ?")
+            parametros.append(mascota_id)
+        donde = f" WHERE {' AND '.join(condiciones)}" if condiciones else ""
+        filas = self._con.consultar(
+            f"SELECT {self._COLUMNAS} FROM hospitalizaciones{donde}"
+            " ORDER BY ingresada_en, hospitalizacion_id", parametros)
+        return [self._de_fila(fila) for fila in filas]
+
+
+def _filtro(mascota_id: str | None, cita_id: str | None) -> tuple[str, list[Any]]:
+    condiciones: list[str] = []
+    parametros: list[Any] = []
+    if mascota_id is not None:
+        condiciones.append("mascota_id = ?")
+        parametros.append(mascota_id)
+    if cita_id is not None:
+        condiciones.append("cita_id = ?")
+        parametros.append(cita_id)
+    return (f" WHERE {' AND '.join(condiciones)}" if condiciones else ""), parametros
+
+
+class RepositorioDeRecetasSql(RepositorioDeRecetas):
+    _COLUMNAS = "receta_id, mascota_id, cita_id, registrada_en"
+
+    def __init__(self, conexion: Conexion) -> None:
+        self._con = conexion
+
+    def agregar(self, receta: Receta) -> None:
+        self._con.ejecutar(
+            f"INSERT INTO recetas ({self._COLUMNAS}) VALUES (?, ?, ?, ?)",
+            (receta.receta_id, receta.mascota_id, receta.cita_id, _texto(receta.registrada_en)))
+        for orden, m in enumerate(receta.medicamentos, start=1):
+            self._con.ejecutar(
+                "INSERT INTO receta_medicamentos (receta_id, orden, nombre, dosis, indicaciones)"
+                " VALUES (?, ?, ?, ?, ?)",
+                (receta.receta_id, orden, m.nombre, m.dosis, m.indicaciones))
+
+    def _de_fila(self, fila: tuple[Any, ...]) -> Receta:
+        medicamentos = tuple(
+            Medicamento(nombre=n, dosis=d, indicaciones=i)
+            for n, d, i in self._con.consultar(
+                "SELECT nombre, dosis, indicaciones FROM receta_medicamentos"
+                " WHERE receta_id = ? ORDER BY orden", (fila[0],)))
+        return Receta(
+            receta_id=fila[0], mascota_id=fila[1], cita_id=fila[2],
+            registrada_en=datetime.fromisoformat(fila[3]), medicamentos=medicamentos)
+
+    def obtener(self, receta_id: str) -> Receta | None:
+        filas = self._con.consultar(
+            f"SELECT {self._COLUMNAS} FROM recetas WHERE receta_id = ?", (receta_id,))
+        return self._de_fila(filas[0]) if filas else None
+
+    def listar(self, *, mascota_id: str | None = None, cita_id: str | None = None
+               ) -> list[Receta]:
+        donde, parametros = _filtro(mascota_id, cita_id)
+        filas = self._con.consultar(
+            f"SELECT {self._COLUMNAS} FROM recetas{donde} ORDER BY registrada_en, receta_id",
+            parametros)
+        return [self._de_fila(fila) for fila in filas]
+
+
+class RepositorioDeOrdenesSql(RepositorioDeOrdenes):
+    _COLUMNAS = "orden_id, mascota_id, cita_id, estudio, indicaciones, registrada_en"
+
+    def __init__(self, conexion: Conexion) -> None:
+        self._con = conexion
+
+    def agregar(self, orden: OrdenDeEstudio) -> None:
+        self._con.ejecutar(
+            f"INSERT INTO ordenes_estudio ({self._COLUMNAS}) VALUES (?, ?, ?, ?, ?, ?)",
+            (orden.orden_id, orden.mascota_id, orden.cita_id, orden.estudio, orden.indicaciones,
+             _texto(orden.registrada_en)))
+
+    @staticmethod
+    def _de_fila(fila: tuple[Any, ...]) -> OrdenDeEstudio:
+        return OrdenDeEstudio(
+            orden_id=fila[0], mascota_id=fila[1], cita_id=fila[2], estudio=fila[3],
+            indicaciones=fila[4], registrada_en=datetime.fromisoformat(fila[5]))
+
+    def obtener(self, orden_id: str) -> OrdenDeEstudio | None:
+        filas = self._con.consultar(
+            f"SELECT {self._COLUMNAS} FROM ordenes_estudio WHERE orden_id = ?", (orden_id,))
+        return self._de_fila(filas[0]) if filas else None
+
+    def listar(self, *, mascota_id: str | None = None, cita_id: str | None = None
+               ) -> list[OrdenDeEstudio]:
+        donde, parametros = _filtro(mascota_id, cita_id)
+        filas = self._con.consultar(
+            f"SELECT {self._COLUMNAS} FROM ordenes_estudio{donde} ORDER BY registrada_en, orden_id",
+            parametros)
+        return [self._de_fila(fila) for fila in filas]
+
+
+class RepositorioDeCobrosSql(RepositorioDeCobros):
+    _COLUMNAS = "cobro_id, cita_id, mascota_id, total_centavos, metodo, cobrado_en"
+
+    def __init__(self, conexion: Conexion) -> None:
+        self._con = conexion
+
+    def agregar(self, cobro: Cobro) -> None:
+        self._con.ejecutar(
+            f"INSERT INTO cobros ({self._COLUMNAS}) VALUES (?, ?, ?, ?, ?, ?)",
+            (cobro.cobro_id, cobro.cita_id, cobro.mascota_id, _centavos(cobro.total),
+             cobro.metodo.value, _texto(cobro.cobrado_en)))
+
+    @staticmethod
+    def _de_fila(fila: tuple[Any, ...]) -> Cobro:
+        return Cobro(
+            cobro_id=fila[0], cita_id=fila[1], mascota_id=fila[2], total=_dinero(fila[3]),
+            metodo=MetodoDePago(fila[4]), cobrado_en=datetime.fromisoformat(fila[5]))
+
+    def obtener(self, cobro_id: str) -> Cobro | None:
+        filas = self._con.consultar(
+            f"SELECT {self._COLUMNAS} FROM cobros WHERE cobro_id = ?", (cobro_id,))
+        return self._de_fila(filas[0]) if filas else None
+
+    def de_la_cita(self, cita_id: str) -> Cobro | None:
+        filas = self._con.consultar(
+            f"SELECT {self._COLUMNAS} FROM cobros WHERE cita_id = ?", (cita_id,))
+        return self._de_fila(filas[0]) if filas else None
+
+    def todos(self) -> list[Cobro]:
+        filas = self._con.consultar(
+            f"SELECT {self._COLUMNAS} FROM cobros ORDER BY cobrado_en, cobro_id")
+        return [self._de_fila(fila) for fila in filas]
+
+
 class RepositorioDeEventosSql(RepositorioDeEventos):
     def __init__(self, conexion: Conexion) -> None:
         self._con = conexion
@@ -401,6 +641,11 @@ class UnidadDeTrabajoSql(UnidadDeTrabajo):
         self.vacunaciones = RepositorioDeVacunacionesSql(conexion)
         self.esquemas = RepositorioDeEsquemasSql(conexion)
         self.emergencias = RepositorioDeEmergenciasSql(conexion)
+        self.notas = RepositorioDeNotasSql(conexion)
+        self.hospitalizaciones = RepositorioDeHospitalizacionesSql(conexion)
+        self.recetas = RepositorioDeRecetasSql(conexion)
+        self.ordenes = RepositorioDeOrdenesSql(conexion)
+        self.cobros = RepositorioDeCobrosSql(conexion)
         self.eventos = RepositorioDeEventosSql(conexion)
         return self
 

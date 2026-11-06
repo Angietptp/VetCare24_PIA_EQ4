@@ -1,4 +1,5 @@
-"""Endpoints REST de CU-01 (citas), CU-03 (vacunación) y CU-05 (emergencias).
+"""Endpoints REST de CU-01 (citas), CU-02 (expediente), CU-03 (vacunación), CU-04
+(hospitalización) y CU-05 (emergencias).
 
 Cada endpoint solo traduce HTTP a un caso de uso y de vuelta: no hay reglas de negocio aquí.
 El rol llega en el encabezado X-Rol (J-09); la autenticación queda fuera del dominio (ADR-04).
@@ -12,9 +13,13 @@ from fastapi import APIRouter, Depends, Header, Query, Request, status
 
 from vetcare24.api.errores_http import RolDesconocido, RolNoIndicado
 from vetcare24.api.esquemas import (
+    AltaIn,
     AvisoOut,
     CitaIn,
     CitaOut,
+    CobroIn,
+    CobroOut,
+    DocumentacionOut,
     EmergenciaIn,
     EmergenciaOut,
     EmergenciaRegistradaOut,
@@ -22,41 +27,69 @@ from vetcare24.api.esquemas import (
     EsquemaOut,
     EvaluacionOut,
     EventoOut,
+    ExpedienteOut,
+    HospitalizacionIn,
+    HospitalizacionOut,
     MascotaIn,
     MascotaOut,
     ModificarServiciosIn,
+    MonitoreoIn,
+    NotaClinicaIn,
+    NotaClinicaOut,
+    OrdenEstudioIn,
+    OrdenEstudioOut,
     PropietarioIn,
     PropietarioOut,
+    RecetaIn,
+    RecetaOut,
     RecordatorioOut,
+    ReporteOperacionOut,
     SeguimientoOut,
     ServicioOut,
     VacunacionIn,
     VacunacionOut,
     VacunacionRegistradaOut,
     cita_a_salida,
+    cobro_a_salida,
     emergencia_a_salida,
     esquema_a_salida,
     evaluacion_a_salida,
+    hospitalizacion_a_salida,
     mascota_a_salida,
+    nota_a_salida,
+    orden_a_salida,
     propietario_a_salida,
+    receta_a_salida,
     seguimiento_a_salida,
     servicio_a_salida,
     vacunacion_a_salida,
 )
 from vetcare24.application.comandos import (
     AtenderEmergencia,
+    EmitirOrdenDeEstudio,
+    EmitirReceta,
+    IngresarHospitalizacion,
+    MedicamentoRecetado,
     ModificarCita,
+    RegistrarCobro,
     RegistrarMascota,
+    RegistrarMonitoreo,
+    RegistrarNotaClinica,
     RegistrarPropietario,
     RegistrarVacunacion,
     SolicitarCita,
 )
 from vetcare24.application.control_de_acceso import Permiso, Rol, exigir
 from vetcare24.application.servicios import ReglaEvaluable, ServicioDeCitas, ServicioDeRegistro
+from vetcare24.application.servicios_cobro import ServicioDeCobro
 from vetcare24.application.servicios_emergencias import ServicioDeEmergencias
+from vetcare24.application.servicios_expediente import ServicioDeExpediente
+from vetcare24.application.servicios_hospitalizacion import ServicioDeHospitalizacion
+from vetcare24.application.servicios_reportes import ServicioDeReportes
 from vetcare24.application.servicios_vacunacion import ServicioDeVacunacion
 from vetcare24.domain.cita import Cita, EstadoCita
 from vetcare24.domain.emergencia import EstadoEmergencia
+from vetcare24.domain.hospitalizacion import EstadoHospitalizacion
 
 router = APIRouter()
 
@@ -103,11 +136,31 @@ def servicio_de_emergencias(request: Request) -> ServicioDeEmergencias:
     return request.app.state.emergencias
 
 
+def servicio_de_expediente(request: Request) -> ServicioDeExpediente:
+    return request.app.state.expediente
+
+
+def servicio_de_hospitalizacion(request: Request) -> ServicioDeHospitalizacion:
+    return request.app.state.hospitalizacion
+
+
+def servicio_de_cobro(request: Request) -> ServicioDeCobro:
+    return request.app.state.cobro
+
+
+def servicio_de_reportes(request: Request) -> ServicioDeReportes:
+    return request.app.state.reportes
+
+
 RolActual = Annotated[Rol, Depends(rol_actual)]
 Citas = Annotated[ServicioDeCitas, Depends(servicio_de_citas)]
 Registro = Annotated[ServicioDeRegistro, Depends(servicio_de_registro)]
 Vacunas = Annotated[ServicioDeVacunacion, Depends(servicio_de_vacunacion)]
 Emergencias = Annotated[ServicioDeEmergencias, Depends(servicio_de_emergencias)]
+Expediente = Annotated[ServicioDeExpediente, Depends(servicio_de_expediente)]
+Reportes = Annotated[ServicioDeReportes, Depends(servicio_de_reportes)]
+Cobros = Annotated[ServicioDeCobro, Depends(servicio_de_cobro)]
+Hospitalizaciones = Annotated[ServicioDeHospitalizacion, Depends(servicio_de_hospitalizacion)]
 
 
 def _salida(cita: Cita, citas: ServicioDeCitas) -> CitaOut:
@@ -370,3 +423,190 @@ def avisos_al_veterinario(request: Request, rol: RolActual):
     return [AvisoOut(emergencia_id=a.emergencia_id, mascota_id=a.mascota_id, motivo=a.motivo,
                      identificada_en=a.identificada_en)
             for a in request.app.state.notificador.avisos]
+
+
+# --- expediente clínico (CU-02) ---
+
+@router.post("/mascotas/{mascota_id}/notas-clinicas", response_model=NotaClinicaOut,
+             status_code=status.HTTP_201_CREATED, tags=["Expediente clínico"],
+             summary="Registrar una nota clínica en el expediente",
+             description="Solo el veterinario (R-14). La nota no se modifica después (NB-12); "
+                         "una corrección es otra nota. Si se indica `cita_id`, la cita debe ser "
+                         "de la misma mascota y estar REALIZADA (422 en otro caso).",
+             responses=ERRORES)
+def registrar_nota_clinica(mascota_id: str, datos: NotaClinicaIn, rol: RolActual,
+                           expediente: Expediente):
+    return nota_a_salida(expediente.registrar_nota(rol, RegistrarNotaClinica(
+        mascota_id=mascota_id, diagnostico=datos.diagnostico, indicaciones=datos.indicaciones,
+        cita_id=datos.cita_id, nota_id=datos.nota_id)))
+
+
+@router.get("/mascotas/{mascota_id}/expediente", response_model=ExpedienteOut,
+            tags=["Expediente clínico"], summary="Consultar el expediente de la mascota",
+            description="Veterinario, personal clínico y responsable. Recepción no accede "
+                        "al contenido clínico (403).", responses=ERRORES)
+def consultar_expediente(mascota_id: str, rol: RolActual, expediente: Expediente):
+    return ExpedienteOut(
+        mascota_id=mascota_id,
+        notas=[nota_a_salida(n) for n in expediente.expediente(rol, mascota_id)],
+        recetas=[receta_a_salida(r) for r in expediente.recetas(rol, mascota_id)],
+        ordenes_de_estudio=[orden_a_salida(o) for o in expediente.ordenes(rol, mascota_id)])
+
+
+@router.get("/notas-clinicas/{nota_id}", response_model=NotaClinicaOut,
+            tags=["Expediente clínico"], summary="Consultar una nota clínica",
+            responses=ERRORES)
+def obtener_nota_clinica(nota_id: str, rol: RolActual, expediente: Expediente):
+    return nota_a_salida(expediente.obtener(rol, nota_id))
+
+
+# --- hospitalización (CU-04) ---
+
+@router.post("/hospitalizaciones", response_model=HospitalizacionOut,
+             status_code=status.HTTP_201_CREATED, tags=["Hospitalización"],
+             summary="Ingresar una mascota a hospitalización",
+             description="Veterinario o personal clínico (US17). Una mascota solo puede tener una "
+                         "hospitalización ingresada a la vez (O-03): otra responde 422 "
+                         "`PRECONDICION_NO_CUMPLIDA`.", responses=ERRORES)
+def ingresar_hospitalizacion(datos: HospitalizacionIn, rol: RolActual,
+                             hospitalizaciones: Hospitalizaciones):
+    return hospitalizacion_a_salida(hospitalizaciones.ingresar(rol, IngresarHospitalizacion(
+        mascota_id=datos.mascota_id, motivo=datos.motivo,
+        hospitalizacion_id=datos.hospitalizacion_id)))
+
+
+@router.post("/hospitalizaciones/{hospitalizacion_id}/monitoreo",
+             response_model=HospitalizacionOut, status_code=status.HTTP_201_CREATED,
+             tags=["Hospitalización"], summary="Agregar una lectura a la hoja de monitoreo",
+             description="Veterinario o personal clínico. Solo mientras está INGRESADA; "
+                         "después de dar el alta responde 409 `TRANSICION_INVALIDA`.",
+             responses=ERRORES)
+def registrar_monitoreo(hospitalizacion_id: str, datos: MonitoreoIn, rol: RolActual,
+                        hospitalizaciones: Hospitalizaciones):
+    return hospitalizacion_a_salida(hospitalizaciones.registrar_monitoreo(
+        rol, RegistrarMonitoreo(
+            hospitalizacion_id=hospitalizacion_id, observaciones=datos.observaciones,
+            temperatura_c=datos.temperatura_c, frecuencia_cardiaca=datos.frecuencia_cardiaca)))
+
+
+@router.post("/hospitalizaciones/{hospitalizacion_id}/alta", response_model=HospitalizacionOut,
+             tags=["Hospitalización"], summary="Dar de alta (INGRESADA → ALTA)",
+             description="Solo el veterinario; exige el resumen de alta. Dar de alta dos veces "
+                         "responde 409 `TRANSICION_INVALIDA`.", responses=ERRORES)
+def dar_alta_hospitalizacion(hospitalizacion_id: str, datos: AltaIn, rol: RolActual,
+                             hospitalizaciones: Hospitalizaciones):
+    return hospitalizacion_a_salida(
+        hospitalizaciones.dar_alta(rol, hospitalizacion_id, datos.resumen_alta))
+
+
+@router.get("/hospitalizaciones/{hospitalizacion_id}", response_model=HospitalizacionOut,
+            tags=["Hospitalización"], summary="Consultar una hospitalización",
+            responses=ERRORES)
+def obtener_hospitalizacion(hospitalizacion_id: str, rol: RolActual,
+                            hospitalizaciones: Hospitalizaciones):
+    return hospitalizacion_a_salida(hospitalizaciones.obtener(rol, hospitalizacion_id))
+
+
+@router.get("/hospitalizaciones", response_model=list[HospitalizacionOut],
+            tags=["Hospitalización"], summary="Listar hospitalizaciones (filtros opcionales)",
+            description="De la más antigua a la más reciente.", responses=ERRORES)
+def listar_hospitalizaciones(
+    rol: RolActual, hospitalizaciones: Hospitalizaciones,
+    estado: Annotated[EstadoHospitalizacion | None, Query(description="Filtra por estado.")]
+    = None,
+    mascota_id: Annotated[str | None, Query(description="Filtra por mascota.")] = None,
+):
+    return [hospitalizacion_a_salida(h)
+            for h in hospitalizaciones.listar(rol, estado=estado, mascota_id=mascota_id)]
+
+
+# --- recetas y órdenes de estudio (US13, US14) ---
+
+@router.post("/mascotas/{mascota_id}/recetas", response_model=RecetaOut,
+             status_code=status.HTTP_201_CREATED, tags=["Expediente clínico"],
+             summary="Emitir una receta",
+             description="Solo el veterinario. Lleva al menos un medicamento; `cita_id` es "
+                         "opcional y, si se indica, la cita debe ser REALIZADA y de la mascota.",
+             responses=ERRORES)
+def emitir_receta(mascota_id: str, datos: RecetaIn, rol: RolActual, expediente: Expediente):
+    return receta_a_salida(expediente.emitir_receta(rol, EmitirReceta(
+        mascota_id=mascota_id, cita_id=datos.cita_id, receta_id=datos.receta_id,
+        medicamentos=tuple(MedicamentoRecetado(m.nombre, m.dosis, m.indicaciones)
+                           for m in datos.medicamentos))))
+
+
+@router.get("/recetas/{receta_id}", response_model=RecetaOut, tags=["Expediente clínico"],
+            summary="Consultar una receta", responses=ERRORES)
+def obtener_receta(receta_id: str, rol: RolActual, expediente: Expediente):
+    return receta_a_salida(expediente.obtener_receta(rol, receta_id))
+
+
+@router.post("/mascotas/{mascota_id}/ordenes-estudio", response_model=OrdenEstudioOut,
+             status_code=status.HTTP_201_CREATED, tags=["Expediente clínico"],
+             summary="Emitir una orden de estudio",
+             description="Solo el veterinario; mismas reglas de `cita_id` que la receta.",
+             responses=ERRORES)
+def emitir_orden_de_estudio(mascota_id: str, datos: OrdenEstudioIn, rol: RolActual,
+                            expediente: Expediente):
+    return orden_a_salida(expediente.emitir_orden(rol, EmitirOrdenDeEstudio(
+        mascota_id=mascota_id, estudio=datos.estudio, indicaciones=datos.indicaciones,
+        cita_id=datos.cita_id, orden_id=datos.orden_id)))
+
+
+@router.get("/ordenes-estudio/{orden_id}", response_model=OrdenEstudioOut,
+            tags=["Expediente clínico"], summary="Consultar una orden de estudio",
+            responses=ERRORES)
+def obtener_orden_de_estudio(orden_id: str, rol: RolActual, expediente: Expediente):
+    return orden_a_salida(expediente.obtener_orden(rol, orden_id))
+
+
+# --- cobro y entrega de documentación (US10) ---
+
+@router.post("/citas/{cita_id}/cobro", response_model=CobroOut,
+             status_code=status.HTTP_201_CREATED, tags=["Cobro"],
+             summary="Cobrar una cita realizada",
+             description="Solo Recepción. La cita debe estar REALIZADA y se cobra una sola vez, "
+                         "por su total vigente (422 en otro caso). Es el registro del pago, no "
+                         "una factura fiscal (A-02).", responses=ERRORES)
+def cobrar_cita(cita_id: str, datos: CobroIn, rol: RolActual, cobros: Cobros):
+    return cobro_a_salida(cobros.cobrar(rol, RegistrarCobro(
+        cita_id=cita_id, metodo=datos.metodo, cobro_id=datos.cobro_id)))
+
+
+@router.get("/citas/{cita_id}/cobro", response_model=CobroOut, tags=["Cobro"],
+            summary="Consultar el cobro de una cita", responses=ERRORES)
+def consultar_cobro(cita_id: str, rol: RolActual, cobros: Cobros):
+    return cobro_a_salida(cobros.obtener_de_la_cita(rol, cita_id))
+
+
+@router.post("/citas/{cita_id}/documentacion", response_model=DocumentacionOut,
+             tags=["Cobro"], summary="Entregar la documentación al propietario",
+             description="Solo Recepción. Reúne el comprobante de cobro, las notas, las recetas "
+                         "y las órdenes de estudio de la cita. Exige que la cita ya esté "
+                         "cobrada (422 `CITA_SIN_COBRO`).", responses=ERRORES)
+def entregar_documentacion(cita_id: str, rol: RolActual, cobros: Cobros):
+    d = cobros.entregar_documentacion(rol, cita_id)
+    return DocumentacionOut(
+        cita_id=d.cita_id, propietario_id=d.propietario_id, mascota_id=d.mascota_id,
+        cobro=cobro_a_salida(d.cobro), notas=[nota_a_salida(n) for n in d.notas],
+        recetas=[receta_a_salida(r) for r in d.recetas],
+        ordenes_de_estudio=[orden_a_salida(o) for o in d.ordenes])
+
+
+# --- reportes de supervisión (NB-21) ---
+
+@router.get("/reportes/operacion", response_model=ReporteOperacionOut, tags=["Reportes"],
+            summary="Reporte de operación de la clínica",
+            description="Solo el responsable. Cuenta citas, emergencias y hospitalizaciones por "
+                        "estado, y resume cobros (total y por método), recetas y órdenes de "
+                        "estudio. Solo consulta: no modifica nada.", responses=ERRORES)
+def reporte_de_operacion(rol: RolActual, reportes: Reportes):
+    r = reportes.operacion(rol)
+    return ReporteOperacionOut(
+        generado_en=r.generado_en, citas_por_estado=r.citas_por_estado,
+        emergencias_por_estado=r.emergencias_por_estado,
+        hospitalizaciones_por_estado=r.hospitalizaciones_por_estado,
+        cobros_registrados=r.cobros_registrados, ingresos_mxn=str(r.ingresos_mxn.monto),
+        ingresos_por_metodo={m: str(v.monto) for m, v in r.ingresos_por_metodo.items()},
+        recetas_emitidas=r.recetas_emitidas,
+        ordenes_de_estudio_emitidas=r.ordenes_de_estudio_emitidas)

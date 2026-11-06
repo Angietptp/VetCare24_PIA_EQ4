@@ -66,3 +66,70 @@ class AtenderEmergencia:
     mascota_id: str | None = None  # P3: opcional
     datos_paciente: str | None = None
     emergencia_id: str | None = None
+
+
+@dataclass(frozen=True)
+class RegistrarNotaClinica:
+    """CU-02: nota en el expediente; `cita_id` opcional liga la nota a una cita realizada."""
+
+    mascota_id: str
+    diagnostico: str
+    indicaciones: str | None = None
+    cita_id: str | None = None
+    nota_id: str | None = None
+
+
+@dataclass(frozen=True)
+class IngresarHospitalizacion:
+    """CU-04: ingresa a la mascota (O-03: una sola hospitalización ingresada)."""
+
+    mascota_id: str
+    motivo: str
+    hospitalizacion_id: str | None = None
+
+
+@dataclass(frozen=True)
+class RegistrarMonitoreo:
+    """CU-04: una lectura de la hoja de monitoreo."""
+
+    hospitalizacion_id: str
+    observaciones: str
+    temperatura_c: Decimal | None = None
+    frecuencia_cardiaca: int | None = None
+
+
+@dataclass(frozen=True)
+class MedicamentoRecetado:
+    nombre: str
+    dosis: str
+    indicaciones: str | None = None
+
+
+@dataclass(frozen=True)
+class EmitirReceta:
+    """US13: receta con al menos un medicamento; `cita_id` opcional (cita realizada)."""
+
+    mascota_id: str
+    medicamentos: tuple[MedicamentoRecetado, ...]
+    cita_id: str | None = None
+    receta_id: str | None = None
+
+
+@dataclass(frozen=True)
+class EmitirOrdenDeEstudio:
+    """US14: orden de un estudio de laboratorio o gabinete."""
+
+    mascota_id: str
+    estudio: str
+    indicaciones: str | None = None
+    cita_id: str | None = None
+    orden_id: str | None = None
+
+
+@dataclass(frozen=True)
+class RegistrarCobro:
+    """US10: cobro de una cita realizada; `metodo` es efectivo, tarjeta o transferencia."""
+
+    cita_id: str
+    metodo: str
+    cobro_id: str | None = None

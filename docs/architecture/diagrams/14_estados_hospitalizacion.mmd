@@ -1,0 +1,8 @@
+stateDiagram-v2
+  direction LR
+  [*] --> INGRESADA: ingresar
+  INGRESADA --> INGRESADA: registrar_monitoreo
+  INGRESADA --> ALTA: dar_alta
+  ALTA --> [*]
+  note right of INGRESADA: Una sola ingresada por mascota. Veterinario o personal clínico ingresan y monitorean.
+  note right of ALTA: El resumen de alta es obligatorio y solo lo da el Veterinario. Ya no admite cambios (409).

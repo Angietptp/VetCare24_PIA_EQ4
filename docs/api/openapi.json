@@ -2894,6 +2894,449 @@
           }
         }
       }
+    },
+    "/mascotas/{mascota_id}/notas-clinicas": {
+      "post": {
+        "tags": [
+          "Expediente clínico"
+        ],
+        "summary": "Registrar una nota clínica en el expediente",
+        "description": "Solo el veterinario (R-14). La nota no se modifica después (NB-12).",
+        "operationId": "registrar_nota_clinica_mascotas__mascota_id__notas_clinicas_post",
+        "responses": {
+          "201": {
+            "description": "Correcto"
+          },
+          "400": {
+            "description": "Solicitud mal formada o rol desconocido"
+          },
+          "401": {
+            "description": "Falta el encabezado X-Rol"
+          },
+          "403": {
+            "description": "El rol no tiene permiso"
+          },
+          "404": {
+            "description": "No existe el recurso"
+          },
+          "409": {
+            "description": "Transición inválida o recurso duplicado"
+          },
+          "422": {
+            "description": "Regla de negocio no cumplida"
+          }
+        }
+      }
+    },
+    "/mascotas/{mascota_id}/expediente": {
+      "get": {
+        "tags": [
+          "Expediente clínico"
+        ],
+        "summary": "Consultar el expediente de la mascota",
+        "description": "Veterinario, personal clínico y responsable.",
+        "operationId": "consultar_expediente_mascotas__mascota_id__expediente_get",
+        "responses": {
+          "200": {
+            "description": "Correcto"
+          },
+          "401": {
+            "description": "Falta el encabezado X-Rol"
+          },
+          "403": {
+            "description": "El rol no tiene permiso"
+          },
+          "404": {
+            "description": "No existe el recurso"
+          }
+        }
+      }
+    },
+    "/notas-clinicas/{nota_id}": {
+      "get": {
+        "tags": [
+          "Expediente clínico"
+        ],
+        "summary": "Consultar una nota clínica",
+        "description": "",
+        "operationId": "obtener_nota_clinica_notas_clinicas__nota_id__get",
+        "responses": {
+          "200": {
+            "description": "Correcto"
+          },
+          "401": {
+            "description": "Falta el encabezado X-Rol"
+          },
+          "403": {
+            "description": "El rol no tiene permiso"
+          },
+          "404": {
+            "description": "No existe el recurso"
+          }
+        }
+      }
+    },
+    "/hospitalizaciones": {
+      "post": {
+        "tags": [
+          "Hospitalización"
+        ],
+        "summary": "Ingresar una mascota a hospitalización",
+        "description": "Veterinario o personal clínico. Una sola hospitalización ingresada por mascota.",
+        "operationId": "ingresar_hospitalizacion_hospitalizaciones_post",
+        "responses": {
+          "201": {
+            "description": "Correcto"
+          },
+          "400": {
+            "description": "Solicitud mal formada o rol desconocido"
+          },
+          "401": {
+            "description": "Falta el encabezado X-Rol"
+          },
+          "403": {
+            "description": "El rol no tiene permiso"
+          },
+          "404": {
+            "description": "No existe el recurso"
+          },
+          "409": {
+            "description": "Transición inválida o recurso duplicado"
+          },
+          "422": {
+            "description": "Regla de negocio no cumplida"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Hospitalización"
+        ],
+        "summary": "Listar hospitalizaciones (filtros opcionales)",
+        "description": "De la más antigua a la más reciente.",
+        "operationId": "listar_hospitalizaciones_hospitalizaciones_get",
+        "responses": {
+          "200": {
+            "description": "Correcto"
+          },
+          "401": {
+            "description": "Falta el encabezado X-Rol"
+          },
+          "403": {
+            "description": "El rol no tiene permiso"
+          },
+          "404": {
+            "description": "No existe el recurso"
+          }
+        }
+      }
+    },
+    "/hospitalizaciones/{hospitalizacion_id}": {
+      "get": {
+        "tags": [
+          "Hospitalización"
+        ],
+        "summary": "Consultar una hospitalización",
+        "description": "",
+        "operationId": "obtener_hospitalizacion_hospitalizaciones__hospitalizacion_id__get",
+        "responses": {
+          "200": {
+            "description": "Correcto"
+          },
+          "401": {
+            "description": "Falta el encabezado X-Rol"
+          },
+          "403": {
+            "description": "El rol no tiene permiso"
+          },
+          "404": {
+            "description": "No existe el recurso"
+          }
+        }
+      }
+    },
+    "/hospitalizaciones/{hospitalizacion_id}/monitoreo": {
+      "post": {
+        "tags": [
+          "Hospitalización"
+        ],
+        "summary": "Agregar una lectura a la hoja de monitoreo",
+        "description": "Solo mientras está INGRESADA.",
+        "operationId": "registrar_monitoreo_hospitalizaciones__hospitalizacion_id__monitoreo_post",
+        "responses": {
+          "201": {
+            "description": "Correcto"
+          },
+          "400": {
+            "description": "Solicitud mal formada o rol desconocido"
+          },
+          "401": {
+            "description": "Falta el encabezado X-Rol"
+          },
+          "403": {
+            "description": "El rol no tiene permiso"
+          },
+          "404": {
+            "description": "No existe el recurso"
+          },
+          "409": {
+            "description": "Transición inválida o recurso duplicado"
+          },
+          "422": {
+            "description": "Regla de negocio no cumplida"
+          }
+        }
+      }
+    },
+    "/hospitalizaciones/{hospitalizacion_id}/alta": {
+      "post": {
+        "tags": [
+          "Hospitalización"
+        ],
+        "summary": "Dar de alta (INGRESADA → ALTA)",
+        "description": "Solo el veterinario; exige el resumen de alta.",
+        "operationId": "dar_alta_hospitalizacion_hospitalizaciones__hospitalizacion_id__alta_post",
+        "responses": {
+          "200": {
+            "description": "Correcto"
+          },
+          "400": {
+            "description": "Solicitud mal formada o rol desconocido"
+          },
+          "401": {
+            "description": "Falta el encabezado X-Rol"
+          },
+          "403": {
+            "description": "El rol no tiene permiso"
+          },
+          "404": {
+            "description": "No existe el recurso"
+          },
+          "409": {
+            "description": "Transición inválida o recurso duplicado"
+          },
+          "422": {
+            "description": "Regla de negocio no cumplida"
+          }
+        }
+      }
+    },
+    "/mascotas/{mascota_id}/recetas": {
+      "post": {
+        "tags": [
+          "Expediente clínico"
+        ],
+        "summary": "Emitir una receta",
+        "description": "Solo el veterinario; al menos un medicamento.",
+        "operationId": "emitir_receta_mascotas__mascota_id__recetas_post",
+        "responses": {
+          "201": {
+            "description": "Correcto"
+          },
+          "400": {
+            "description": "Solicitud mal formada o rol desconocido"
+          },
+          "401": {
+            "description": "Falta el encabezado X-Rol"
+          },
+          "403": {
+            "description": "El rol no tiene permiso"
+          },
+          "404": {
+            "description": "No existe el recurso"
+          },
+          "409": {
+            "description": "Transición inválida o recurso duplicado"
+          },
+          "422": {
+            "description": "Regla de negocio no cumplida"
+          }
+        }
+      }
+    },
+    "/recetas/{receta_id}": {
+      "get": {
+        "tags": [
+          "Expediente clínico"
+        ],
+        "summary": "Consultar una receta",
+        "description": "",
+        "operationId": "obtener_receta_recetas__receta_id__get",
+        "responses": {
+          "200": {
+            "description": "Correcto"
+          },
+          "401": {
+            "description": "Falta el encabezado X-Rol"
+          },
+          "403": {
+            "description": "El rol no tiene permiso"
+          },
+          "404": {
+            "description": "No existe el recurso"
+          }
+        }
+      }
+    },
+    "/mascotas/{mascota_id}/ordenes-estudio": {
+      "post": {
+        "tags": [
+          "Expediente clínico"
+        ],
+        "summary": "Emitir una orden de estudio",
+        "description": "Solo el veterinario.",
+        "operationId": "emitir_orden_de_estudio_mascotas__mascota_id__ordenes_estudio_post",
+        "responses": {
+          "201": {
+            "description": "Correcto"
+          },
+          "400": {
+            "description": "Solicitud mal formada o rol desconocido"
+          },
+          "401": {
+            "description": "Falta el encabezado X-Rol"
+          },
+          "403": {
+            "description": "El rol no tiene permiso"
+          },
+          "404": {
+            "description": "No existe el recurso"
+          },
+          "409": {
+            "description": "Transición inválida o recurso duplicado"
+          },
+          "422": {
+            "description": "Regla de negocio no cumplida"
+          }
+        }
+      }
+    },
+    "/ordenes-estudio/{orden_id}": {
+      "get": {
+        "tags": [
+          "Expediente clínico"
+        ],
+        "summary": "Consultar una orden de estudio",
+        "description": "",
+        "operationId": "obtener_orden_de_estudio_ordenes_estudio__orden_id__get",
+        "responses": {
+          "200": {
+            "description": "Correcto"
+          },
+          "401": {
+            "description": "Falta el encabezado X-Rol"
+          },
+          "403": {
+            "description": "El rol no tiene permiso"
+          },
+          "404": {
+            "description": "No existe el recurso"
+          }
+        }
+      }
+    },
+    "/citas/{cita_id}/cobro": {
+      "post": {
+        "tags": [
+          "Cobro"
+        ],
+        "summary": "Cobrar una cita realizada",
+        "description": "Solo Recepción; una sola vez por cita.",
+        "operationId": "cobrar_cita_citas__cita_id__cobro_post",
+        "responses": {
+          "201": {
+            "description": "Correcto"
+          },
+          "400": {
+            "description": "Solicitud mal formada o rol desconocido"
+          },
+          "401": {
+            "description": "Falta el encabezado X-Rol"
+          },
+          "403": {
+            "description": "El rol no tiene permiso"
+          },
+          "404": {
+            "description": "No existe el recurso"
+          },
+          "409": {
+            "description": "Transición inválida o recurso duplicado"
+          },
+          "422": {
+            "description": "Regla de negocio no cumplida"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Cobro"
+        ],
+        "summary": "Consultar el cobro de una cita",
+        "description": "",
+        "operationId": "consultar_cobro_citas__cita_id__cobro_get",
+        "responses": {
+          "200": {
+            "description": "Correcto"
+          },
+          "401": {
+            "description": "Falta el encabezado X-Rol"
+          },
+          "403": {
+            "description": "El rol no tiene permiso"
+          },
+          "404": {
+            "description": "No existe el recurso"
+          }
+        }
+      }
+    },
+    "/citas/{cita_id}/documentacion": {
+      "post": {
+        "tags": [
+          "Cobro"
+        ],
+        "summary": "Entregar la documentación al propietario",
+        "description": "Solo Recepción; exige la cita cobrada.",
+        "operationId": "entregar_documentacion_citas__cita_id__documentacion_post",
+        "responses": {
+          "200": {
+            "description": "Correcto"
+          },
+          "401": {
+            "description": "Falta el encabezado X-Rol"
+          },
+          "403": {
+            "description": "El rol no tiene permiso"
+          },
+          "404": {
+            "description": "No existe el recurso"
+          },
+          "422": {
+            "description": "Regla de negocio no cumplida"
+          }
+        }
+      }
+    },
+    "/reportes/operacion": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Reporte de operación de la clínica",
+        "description": "Solo el responsable.",
+        "operationId": "reporte_de_operacion_reportes_operacion_get",
+        "responses": {
+          "200": {
+            "description": "Correcto"
+          },
+          "401": {
+            "description": "Falta el encabezado X-Rol"
+          },
+          "403": {
+            "description": "El rol no tiene permiso"
+          }
+        }
+      }
     }
   },
   "components": {

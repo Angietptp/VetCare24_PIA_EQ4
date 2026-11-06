@@ -35,9 +35,12 @@ def test_responsable_solo_consulta():
         exigir(Rol.RESPONSABLE, Permiso.CONFIRMAR_CITA)
 
 
-def test_personal_clinico_solo_atiende_y_consulta_emergencias():
-    """CU-05 (Etapa 10): sus únicos permisos; nada sobre citas ni vacunas (A-01, A-09, N-07)."""
-    propios = {Permiso.INICIAR_ATENCION_EMERGENCIA, Permiso.CONSULTAR_EMERGENCIA}
+def test_personal_clinico_atiende_emergencias_y_apoya_la_hospitalizacion():
+    """Sus únicos permisos: emergencias (CU-05), consulta de expediente y monitoreo de
+    hospitalización (CU-02, CU-04); nada sobre citas ni vacunas (A-01, A-09, N-07)."""
+    propios = {Permiso.INICIAR_ATENCION_EMERGENCIA, Permiso.CONSULTAR_EMERGENCIA,
+               Permiso.CONSULTAR_EXPEDIENTE, Permiso.MONITOREAR_HOSPITALIZACION,
+               Permiso.CONSULTAR_HOSPITALIZACION, Permiso.INGRESAR_HOSPITALIZACION}
     assert PERMISOS_POR_ROL[Rol.PERSONAL_CLINICO] == propios
     for permiso in set(Permiso) - propios:
         with pytest.raises(AccesoDenegado):

@@ -4,16 +4,14 @@ Lógica de negocio de una clínica veterinaria (citas, vacunación y emergencias
 
 | | |
 |---|---|
-| **Repositorio** | `<URL_DEL_REPOSITORIO>` |
-| **Despliegue (Swagger UI)** | `<URL_DESPLEGADA>/docs` |
+| **Repositorio** | https://github.com/Angietptp/VetCare24_PIA_EQ4 |
+| **Despliegue (Swagger UI)** | https://vetcare24-production.up.railway.app/docs |
 | **Equipo 4** | García Cerda Randal Guillermo (2112493) · Sarmiento Hernández Cesar Martín (2119427) · Torres Pasillas Angela Susana (2101844) |
 | **Curso / profesor** | Componentes de Lógica de Negocios · Miguel Ángel Gómez Marroquín |
 
-> Reemplaza los dos marcadores `<...>` de la tabla con las URLs reales antes de entregar (ver `docs/despliegue.md`).
-
 ## Alcance
 
-Implementados de punta a punta (dominio, base de datos, API y pruebas): **CU-01 Solicitar cita**, **CU-03 Registrar vacunación** y **CU-05 Atender una emergencia**. **CU-02 (nota clínica / expediente) y CU-04 (hospitalización) quedan fuera del alcance implementado**; su diseño se conserva y aparece marcado en los diagramas. Detalle: [`docs/alcance_implementado.md`](docs/alcance_implementado.md) y ADR-09.
+Los cinco casos de uso están implementados de punta a punta (dominio, base de datos, API y pruebas): **CU-01 Solicitar cita**, **CU-02 Generar nota clínica (expediente)**, **CU-03 Registrar vacunación**, **CU-04 Registrar hospitalización** y **CU-05 Atender una emergencia**. También están implementados las recetas y órdenes de estudio, el cobro con entrega de documentación y el reporte de operación. Quedan fuera la factura fiscal, el envío real de recordatorios y la autenticación. Detalle: [`docs/alcance_implementado.md`](docs/alcance_implementado.md) y ADR-09.
 
 ## Documentación
 

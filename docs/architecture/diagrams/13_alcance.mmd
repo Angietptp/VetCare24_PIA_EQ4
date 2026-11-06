@@ -1,15 +1,16 @@
 flowchart LR
   subgraph IMP["Implementado (dominio + base de datos + API + pruebas)"]
     CU01["CU-01 Solicitar cita<br/>US04, US01, US02, US07"]
+    CU02["CU-02 Generar nota clínica (expediente)<br/>US03, US11, US12"]
     CU03["CU-03 Registrar vacunación<br/>US15, US05 (vacunas)"]
+    CU04["CU-04 Hospitalización y monitoreo<br/>US17, US18, US19"]
     CU05["CU-05 Atender una emergencia<br/>US20"]
+    COM["Complementos: recetas y órdenes (US13, US14),<br/>cobro y documentación (US10), reportes (NB-21)"]
   end
-  subgraph OUT["Fuera del alcance implementado (diseño documentado)"]
-    CU02["CU-02 Generar nota clínica<br/>US03, US11, US12, US13, US14"]
-    CU04["CU-04 Hospitalización<br/>US17, US18, US19"]
-    REP["Cobro, reportes, hoja de monitoreo"]
+  subgraph OUT["Fuera del alcance implementado"]
+    REP["Factura fiscal, envío real de recordatorios, autenticación"]
   end
   classDef ok fill:#d4efdf,stroke:#148c3c;
   classDef no fill:#f3d2d2,stroke:#c81e1e,stroke-dasharray:4 3;
-  class CU01,CU03,CU05 ok;
-  class CU02,CU04,REP no;
+  class CU01,CU02,CU03,CU04,CU05,COM ok;
+  class REP no;

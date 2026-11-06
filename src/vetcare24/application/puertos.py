@@ -12,9 +12,13 @@ from typing import Any
 
 from vetcare24.domain.catalogo import ServicioVeterinario
 from vetcare24.domain.cita import Cita, EstadoCita
+from vetcare24.domain.cobro import Cobro
+from vetcare24.domain.documentos_clinicos import OrdenDeEstudio, Receta
 from vetcare24.domain.emergencia import Emergencia, EstadoEmergencia
 from vetcare24.domain.eventos import EventoDeDominio
+from vetcare24.domain.hospitalizacion import EstadoHospitalizacion, Hospitalizacion
 from vetcare24.domain.mascota import Mascota
+from vetcare24.domain.nota_clinica import NotaClinica
 from vetcare24.domain.propietario import Propietario
 from vetcare24.domain.vacunacion import EsquemaDeVacunacion, Vacunacion
 
@@ -123,6 +127,76 @@ class RepositorioDeEmergencias(ABC):
     ) -> list[Emergencia]: ...
 
 
+class RepositorioDeNotas(ABC):
+    """Expediente clínico: las notas solo se agregan, nunca se modifican (NB-12)."""
+
+    @abstractmethod
+    def agregar(self, nota: NotaClinica) -> None: ...
+
+    @abstractmethod
+    def obtener(self, nota_id: str) -> NotaClinica | None: ...
+
+    @abstractmethod
+    def listar(self, *, mascota_id: str) -> list[NotaClinica]:
+        """El expediente de la mascota, de la nota más antigua a la más reciente."""
+
+
+class RepositorioDeHospitalizaciones(ABC):
+    @abstractmethod
+    def agregar(self, hospitalizacion: Hospitalizacion) -> None: ...
+
+    @abstractmethod
+    def guardar(self, hospitalizacion: Hospitalizacion) -> None:
+        """Guarda el estado actual (incluida la hoja de monitoreo) de una que ya existe."""
+
+    @abstractmethod
+    def obtener(self, hospitalizacion_id: str) -> Hospitalizacion | None: ...
+
+    @abstractmethod
+    def listar(
+        self, *, estado: EstadoHospitalizacion | None = None, mascota_id: str | None = None
+    ) -> list[Hospitalizacion]: ...
+
+
+class RepositorioDeRecetas(ABC):
+    @abstractmethod
+    def agregar(self, receta: Receta) -> None: ...
+
+    @abstractmethod
+    def obtener(self, receta_id: str) -> Receta | None: ...
+
+    @abstractmethod
+    def listar(self, *, mascota_id: str | None = None, cita_id: str | None = None
+               ) -> list[Receta]: ...
+
+
+class RepositorioDeOrdenes(ABC):
+    @abstractmethod
+    def agregar(self, orden: OrdenDeEstudio) -> None: ...
+
+    @abstractmethod
+    def obtener(self, orden_id: str) -> OrdenDeEstudio | None: ...
+
+    @abstractmethod
+    def listar(self, *, mascota_id: str | None = None, cita_id: str | None = None
+               ) -> list[OrdenDeEstudio]: ...
+
+
+class RepositorioDeCobros(ABC):
+    @abstractmethod
+    def agregar(self, cobro: Cobro) -> None: ...
+
+    @abstractmethod
+    def obtener(self, cobro_id: str) -> Cobro | None: ...
+
+    @abstractmethod
+    def de_la_cita(self, cita_id: str) -> Cobro | None: ...
+
+    @abstractmethod
+    def todos(self) -> list[Cobro]:
+        """Todos los cobros, del más antiguo al más reciente."""
+
+
 class RepositorioDeEventos(ABC):
     @abstractmethod
     def agregar(self, evento: EventoDeDominio) -> None: ...
@@ -141,6 +215,11 @@ class UnidadDeTrabajo(ABC):
     vacunaciones: RepositorioDeVacunaciones
     esquemas: RepositorioDeEsquemas
     emergencias: RepositorioDeEmergencias
+    notas: RepositorioDeNotas
+    hospitalizaciones: RepositorioDeHospitalizaciones
+    recetas: RepositorioDeRecetas
+    ordenes: RepositorioDeOrdenes
+    cobros: RepositorioDeCobros
     eventos: RepositorioDeEventos
 
     @abstractmethod

@@ -1,0 +1,39 @@
+sequenceDiagram
+  actor Pc as Personal clínico / Veterinario
+  participant API as FastAPI (rutas)
+  participant SH as ServicioDeHospitalizacion
+  participant CA as control_de_acceso
+  participant UOW as UnidadDeTrabajoSql
+  participant D as Hospitalizacion / CicloDeVida
+  participant DS as Despachador
+  Pc->>API: POST /hospitalizaciones (X-Rol)
+  API->>SH: ingresar(rol, comando)
+  SH->>CA: exigir(INGRESAR_HOSPITALIZACION) (si no: 403)
+  SH->>UOW: abrir transacción
+  SH->>UOW: mascotas.obtener (404 si no existe)
+  SH->>UOW: hospitalizaciones.listar(mascota)
+  SH->>D: ingresar(mascota, motivo, hospitalizaciones previas)
+  alt ya hay una INGRESADA
+    D--xSH: PrecondicionNoCumplida (422 MASCOTA_YA_HOSPITALIZADA)
+  else
+    D-->>SH: Hospitalizacion INGRESADA + evento HospitalizacionIniciada
+    SH->>UOW: hospitalizaciones.agregar + eventos.agregar
+    SH->>UOW: commit
+    SH->>DS: publicar(eventos) tras el commit
+    SH-->>API: Hospitalizacion
+    API-->>Pc: 201 (hoja de monitoreo vacía)
+  end
+  loop mientras esté INGRESADA
+    Pc->>API: POST /hospitalizaciones/{id}/monitoreo
+    API->>SH: registrar_monitoreo
+    SH->>D: registrar_monitoreo(lectura)
+    SH->>UOW: guardar + commit
+    API-->>Pc: 201 (hoja actualizada)
+  end
+  Pc->>API: POST /hospitalizaciones/{id}/alta (Veterinario)
+  API->>SH: dar_alta(rol, id, resumen)
+  SH->>D: dar_alta(resumen)
+  D-->>SH: estado ALTA + evento HospitalizacionFinalizada
+  SH->>UOW: guardar + eventos.agregar + commit
+  SH->>DS: publicar(eventos)
+  API-->>Pc: 200

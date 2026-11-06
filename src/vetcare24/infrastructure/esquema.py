@@ -11,7 +11,10 @@ from vetcare24.infrastructure.base_de_datos import Conexion, Dialecto
 
 TABLAS = (
     "propietarios", "mascotas", "servicios", "citas", "cita_lineas",
-    "vacunaciones", "esquemas_vacunacion", "emergencias", "eventos_dominio",
+    "vacunaciones", "esquemas_vacunacion", "emergencias", "notas_clinicas",
+    "hospitalizaciones", "lecturas_monitoreo", "recetas", "receta_medicamentos",
+    "ordenes_estudio", "cobros",
+    "eventos_dominio",
 )
 
 
@@ -84,6 +87,63 @@ def sentencias_de_creacion(dialecto: Dialecto) -> list[str]:
             atendida_en TEXT,
             CHECK ((estado = 'EN_ATENCION') = (atendida_en IS NOT NULL))
         )""",
+        """CREATE TABLE IF NOT EXISTS notas_clinicas (
+            nota_id TEXT PRIMARY KEY,
+            mascota_id TEXT NOT NULL REFERENCES mascotas (mascota_id),
+            cita_id TEXT REFERENCES citas (cita_id),
+            diagnostico TEXT NOT NULL CHECK (diagnostico <> ''),
+            indicaciones TEXT,
+            registrada_en TEXT NOT NULL
+        )""",
+        """CREATE TABLE IF NOT EXISTS hospitalizaciones (
+            hospitalizacion_id TEXT PRIMARY KEY,
+            mascota_id TEXT NOT NULL REFERENCES mascotas (mascota_id),
+            motivo TEXT NOT NULL CHECK (motivo <> ''),
+            estado TEXT NOT NULL CHECK (estado IN ('INGRESADA', 'ALTA')),
+            ingresada_en TEXT NOT NULL,
+            alta_en TEXT,
+            resumen_alta TEXT,
+            CHECK ((estado = 'ALTA') = (alta_en IS NOT NULL AND resumen_alta IS NOT NULL))
+        )""",
+        """CREATE TABLE IF NOT EXISTS lecturas_monitoreo (
+            hospitalizacion_id TEXT NOT NULL REFERENCES hospitalizaciones (hospitalizacion_id),
+            orden INTEGER NOT NULL CHECK (orden >= 1),
+            registrada_en TEXT NOT NULL,
+            observaciones TEXT NOT NULL CHECK (observaciones <> ''),
+            temperatura_c TEXT,
+            frecuencia_cardiaca INTEGER CHECK (frecuencia_cardiaca BETWEEN 1 AND 400),
+            PRIMARY KEY (hospitalizacion_id, orden)
+        )""",
+        """CREATE TABLE IF NOT EXISTS recetas (
+            receta_id TEXT PRIMARY KEY,
+            mascota_id TEXT NOT NULL REFERENCES mascotas (mascota_id),
+            cita_id TEXT REFERENCES citas (cita_id),
+            registrada_en TEXT NOT NULL
+        )""",
+        """CREATE TABLE IF NOT EXISTS receta_medicamentos (
+            receta_id TEXT NOT NULL REFERENCES recetas (receta_id),
+            orden INTEGER NOT NULL CHECK (orden >= 1),
+            nombre TEXT NOT NULL CHECK (nombre <> ''),
+            dosis TEXT NOT NULL CHECK (dosis <> ''),
+            indicaciones TEXT,
+            PRIMARY KEY (receta_id, orden)
+        )""",
+        """CREATE TABLE IF NOT EXISTS ordenes_estudio (
+            orden_id TEXT PRIMARY KEY,
+            mascota_id TEXT NOT NULL REFERENCES mascotas (mascota_id),
+            cita_id TEXT REFERENCES citas (cita_id),
+            estudio TEXT NOT NULL CHECK (estudio <> ''),
+            indicaciones TEXT,
+            registrada_en TEXT NOT NULL
+        )""",
+        """CREATE TABLE IF NOT EXISTS cobros (
+            cobro_id TEXT PRIMARY KEY,
+            cita_id TEXT NOT NULL UNIQUE REFERENCES citas (cita_id),
+            mascota_id TEXT NOT NULL REFERENCES mascotas (mascota_id),
+            total_centavos BIGINT NOT NULL CHECK (total_centavos >= 0),
+            metodo TEXT NOT NULL CHECK (metodo IN ('efectivo', 'tarjeta', 'transferencia')),
+            cobrado_en TEXT NOT NULL
+        )""",
         f"""CREATE TABLE IF NOT EXISTS eventos_dominio (
             secuencia {dialecto.llave_serie},
             evento TEXT NOT NULL,
@@ -97,6 +157,11 @@ def sentencias_de_creacion(dialecto: Dialecto) -> list[str]:
         "CREATE INDEX IF NOT EXISTS idx_vacunaciones_mascota"
         " ON vacunaciones (mascota_id, vacuna_clave)",
         "CREATE INDEX IF NOT EXISTS idx_emergencias_mascota ON emergencias (mascota_id)",
+        "CREATE INDEX IF NOT EXISTS idx_notas_mascota ON notas_clinicas (mascota_id)",
+        "CREATE INDEX IF NOT EXISTS idx_hospitalizaciones_mascota"
+        " ON hospitalizaciones (mascota_id, estado)",
+        "CREATE INDEX IF NOT EXISTS idx_recetas_mascota ON recetas (mascota_id)",
+        "CREATE INDEX IF NOT EXISTS idx_ordenes_mascota ON ordenes_estudio (mascota_id)",
         "CREATE INDEX IF NOT EXISTS idx_eventos_agregado"
         " ON eventos_dominio (agregado_tipo, agregado_id)",
     ]

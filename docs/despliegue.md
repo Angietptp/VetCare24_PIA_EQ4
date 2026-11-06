@@ -41,8 +41,8 @@ fly deploy
 ## Verificación
 
 ```bash
-curl https://<URL_DESPLEGADA>/health                       # {"status":"ok"}
-curl -H "X-Rol: recepcion" https://<URL_DESPLEGADA>/servicios
+curl https://https://vetcare24-production.up.railway.app/health                       # {"status":"ok"}
+curl -H "X-Rol: recepcion" https://https://vetcare24-production.up.railway.app/servicios
 ```
 
 Swagger UI queda en `/docs` y el contrato en `/openapi.json`.
@@ -50,3 +50,11 @@ Swagger UI queda en `/docs` y el contrato en `/openapi.json`.
 ## Nota sobre la etapa Docker
 
 El `Dockerfile` define tres etapas: `runtime` (la API), `dev` (agrega pruebas; la usa el servicio `tests` de Compose) y `prod`, que es la **última** y por eso la que construyen las plataformas que no permiten elegir el *target*. Así el despliegue siempre ejecuta la API y nunca `pytest`.
+
+## Despliegue realizado (Railway)
+
+El servicio vigente está en Railway: `https://vetcare24-production.up.railway.app/docs`. Notas de la configuración real:
+
+- Railway construye el `Dockerfile` (etapa final `prod`) e inyecta `PORT` (8080 en este despliegue); el dominio público debe apuntar a ese mismo puerto (*Settings → Networking → Edit Port*).
+- `DATABASE_URL` se define en el servicio con los datos de la base de Railway (variables `PG*`); sin esa variable la aplicación no arranca, porque su valor por defecto apunta a `localhost`.
+- Render pidió tarjeta incluso para el plan gratuito al momento del despliegue, por lo que no se utilizó.

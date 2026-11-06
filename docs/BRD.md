@@ -88,18 +88,18 @@ VetCare 24 es una clínica veterinaria que brinda diferentes servicios para masc
 | NB-07 | Considerar la duración requerida por los diferentes tipos de servicio al gestionar las citas. | Diferida (sin horarios ni duraciones en los datos) |
 | NB-08 | Permitir modificar o cancelar las citas cuando el propietario lo solicite. | Implementada |
 | NB-09 | Registrar la llegada de la mascota y su motivo de consulta. | Parcial (confirmación de la cita; peso y motivo de consulta no se capturan como flujo propio) |
-| NB-10 | Mantener un expediente clínico actualizado para cada mascota. | Fuera del alcance implementado (CU-02) |
-| NB-11 | Facilitar al personal autorizado la consulta de los antecedentes clínicos de una mascota. | Fuera del alcance implementado (CU-02) |
-| NB-12 | Registrar las notas clínicas generadas durante la atención veterinaria. | Fuera del alcance implementado (CU-02) |
-| NB-13 | Registrar los medicamentos, estudios, vacunas o indicaciones de seguimiento determinadas por el veterinario. | Fuera del alcance implementado (CU-02) |
+| NB-10 | Mantener un expediente clínico actualizado para cada mascota. | Implementada (CU-02) |
+| NB-11 | Facilitar al personal autorizado la consulta de los antecedentes clínicos de una mascota. | Implementada (CU-02) |
+| NB-12 | Registrar las notas clínicas generadas durante la atención veterinaria. | Implementada (CU-02) |
+| NB-13 | Registrar los medicamentos, estudios, vacunas o indicaciones de seguimiento determinadas por el veterinario. | Implementada (CU-02: nota con indicaciones, recetas y órdenes de estudio) |
 | NB-14 | Mantener un historial de las vacunas aplicadas a cada mascota. | Implementada |
 | NB-15 | Gestionar la frecuencia o esquema de aplicación de las vacunas y determinar las próximas aplicaciones. | Implementada |
 | NB-16 | Identificar las vacunas que requieren refuerzo y darles el seguimiento correspondiente. | Implementada |
 | NB-17 | Mejorar los recordatorios de vacunas próximas para los propietarios. | Implementada (consulta de próximas; sin envío) |
-| NB-18 | Registrar y dar seguimiento a las mascotas que se encuentren hospitalizadas. | Fuera del alcance implementado (CU-04) |
+| NB-18 | Registrar y dar seguimiento a las mascotas que se encuentren hospitalizadas. | Implementada (CU-04) |
 | NB-19 | Permitir registrar y gestionar emergencias que ocurran sin una cita previamente programada. | Implementada |
 | NB-20 | Controlar los permisos de los usuarios de acuerdo con su rol. | Implementada |
-| NB-21 | Generar reportes que permitan supervisar la operación de la clínica. | Fuera del alcance implementado |
+| NB-21 | Generar reportes que permitan supervisar la operación de la clínica. | Implementada (`GET /reportes/operacion`) |
 
 ## 7. Restricciones
 

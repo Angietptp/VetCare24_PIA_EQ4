@@ -11,14 +11,17 @@ flowchart TB
     S2["ServicioDeVacunacion (CU-03)"]
     S3["ServicioDeEmergencias (CU-05)"]
     S4["ServicioDeRegistro"]
+    S5["ServicioDeExpediente (CU-02)"]
+    S6["ServicioDeHospitalizacion (CU-04)"]
+    S7["ServicioDeCobro y ServicioDeReportes"]
     CA["control_de_acceso (roles y permisos)"]
     DESP["Despachador de eventos"]
     PORT["puertos: UnidadDeTrabajo, repositorios, NotificadorDeVeterinario"]
   end
   subgraph DOM["domain/ — reglas de negocio puras"]
-    AG["Agregados: Cita, Mascota, Propietario, Vacunacion, Emergencia"]
+    AG["Agregados: Cita, Mascota, Propietario, Vacunacion, Emergencia, NotaClinica, Hospitalizacion, Receta, Cobro"]
     SPEC["Specifications AND / OR / NOT"]
-    SM["Máquinas de estado: CicloDeVidaDeCita / Emergencia"]
+    SM["Máquinas de estado: CicloDeVidaDeCita / Emergencia / Hospitalizacion"]
     EV["Eventos de dominio"]
     VO["Money, errores de dominio"]
   end
@@ -32,11 +35,11 @@ flowchart TB
   SW --> R
   HC --> R
   R --> CA
-  R --> S1 & S2 & S3 & S4
-  S1 & S2 & S3 & S4 --> AG
-  S1 & S2 & S3 --> DESP
+  R --> S1 & S2 & S3 & S4 & S5 & S6 & S7
+  S1 & S2 & S3 & S4 & S5 & S6 --> AG
+  S1 & S2 & S3 & S5 & S6 & S7 --> DESP
   AG --> SPEC & SM & EV & VO
-  S1 & S2 & S3 & S4 -. depende de .-> PORT
+  S1 & S2 & S3 & S4 & S5 & S6 & S7 -. depende de .-> PORT
   UOW -. implementa .-> PORT
   NOT -. implementa .-> PORT
   UOW --> DB
