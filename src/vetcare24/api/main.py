@@ -1,10 +1,11 @@
 """Punto de entrada de la API. FastAPI genera el contrato OpenAPI automáticamente."""
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.exceptions import HTTPException as ErrorHttp
 
 from vetcare24 import __version__
@@ -33,6 +34,8 @@ from vetcare24.infrastructure.config import load_settings
 from vetcare24.infrastructure.esquema import crear_esquema
 from vetcare24.infrastructure.notificador import BandejaDeAvisos
 from vetcare24.infrastructure.repositorios_sql import UnidadDeTrabajoSql
+
+_INTERFAZ = Path(__file__).with_name("interfaz.html").read_text(encoding="utf-8")
 
 DESCRIPCION = (
     "Lógica de negocio de la clínica veterinaria VetCare 24 (CU-01: registrar y gestionar "
@@ -123,6 +126,11 @@ def create_app(database_url: str | None = None, *, preparar_esquema: bool = True
     @app.get("/health", tags=["Sistema"], summary="Estado del servicio")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/", include_in_schema=False)
+    def interfaz() -> HTMLResponse:
+        """Interfaz web de demostración; no forma parte del contrato OpenAPI."""
+        return HTMLResponse(_INTERFAZ)
 
     app.include_router(router)
     return app
