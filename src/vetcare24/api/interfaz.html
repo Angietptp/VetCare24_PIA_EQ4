@@ -4,70 +4,108 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>VetCare 24</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--verde:#1d5632;--verde2:#2f7d55;--suave:#eef6f0;--linea:#cfd9d2;--texto:#1e2b24;--gris:#5b6b62;--rojo:#b3402f;--ambar:#b9770e}
+:root{--papel:#f5f2ed;--crema:#fffdf8;--vino:#530200;--amarillo:#fee08a;--celeste:#afcffe;--gris:#7a5a55;--rojo:#b8321f;--linea:#d9cfc4;
+--serif:'Young Serif',Georgia,serif;--sans:'Nunito','Segoe UI',Arial,sans-serif;--mono:'JetBrains Mono',Consolas,monospace}
 *{box-sizing:border-box}
-body{margin:0;font:15px/1.45 Calibri,Arial,sans-serif;color:var(--texto);background:#fff}
-header{background:var(--verde);color:#fff;padding:12px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-header h1{font:700 20px Arial,sans-serif;margin:0;flex:1}
-header label{font-size:13px;opacity:.9}
-header select{padding:6px 8px;border:0;border-radius:3px;font:inherit}
-nav{display:flex;gap:2px;background:var(--suave);border-bottom:1px solid var(--linea);padding:0 24px;overflow-x:auto}
-nav button{border:0;background:none;padding:12px 16px;font:600 14px Arial,sans-serif;color:var(--gris);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
-nav button.on{color:var(--verde);border-bottom-color:var(--verde)}
-main{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px;padding:24px;max-width:1300px;margin:0 auto}
-@media(max-width:900px){main{grid-template-columns:1fr}}
+body{margin:0;font:16px/1.5 var(--sans);color:var(--vino);background:var(--papel);position:relative;min-height:100vh}
+body::before{content:"";position:fixed;left:-140px;bottom:-160px;width:520px;height:520px;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23afcffe' d='M312 40c52 30 70 98 52 156-14 46-58 70-70 114-12 46-70 80-122 62C96 356 40 316 36 260c-4-60 52-84 74-132C134 76 190 20 246 20c24 0 48 8 66 20z'/%3E%3C/svg%3E") no-repeat center/contain;opacity:.55;pointer-events:none;z-index:0}
+body::after{content:"";position:fixed;right:-120px;top:240px;width:420px;height:420px;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23fee08a' d='M60 70c60-50 150-30 210 6 54 32 100 84 92 150-8 62-70 80-112 106-48 30-90 70-140 48C60 354 20 296 24 232c4-56-40-92-34-136 4-12 30-18 70-26z'/%3E%3C/svg%3E") no-repeat center/contain;opacity:.6;pointer-events:none;z-index:0}
+header,nav,main{position:relative;z-index:1}
+header{background:var(--vino);color:var(--papel);padding:22px 32px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;overflow:hidden}
+header::after{content:"";position:absolute;right:360px;top:-50px;width:150px;height:150px;border-radius:50%;background:var(--celeste);opacity:.9}
+header::before{content:"";position:absolute;right:300px;bottom:-50px;width:90px;height:90px;border-radius:50%;background:var(--amarillo)}
+.logo{width:64px;height:64px;border-radius:50%;background:var(--amarillo);display:flex;align-items:center;justify-content:center;flex:none;position:relative;z-index:1}
+.logo svg{width:38px;height:38px}
+header h1{font:400 36px/1 var(--serif);margin:0;flex:1;position:relative;z-index:1}
+header h1 small{display:block;font:700 12px var(--sans);letter-spacing:2.5px;text-transform:uppercase;color:var(--celeste);margin-bottom:6px}
+header label{font:800 12px var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--celeste);position:relative;z-index:1}
+header select{display:block;margin-top:4px;padding:8px 10px;border:2px solid var(--amarillo);border-radius:12px;font:700 14px var(--sans);background:var(--vino);color:var(--papel)}
+nav{display:flex;gap:8px;padding:20px 32px 4px;overflow-x:auto}
+nav button{border:2px solid var(--vino);background:var(--crema);padding:9px 18px;font:800 14px var(--sans);color:var(--vino);cursor:pointer;border-radius:999px;white-space:nowrap;transition:background .1s}
+nav button:hover{background:var(--celeste)}
+nav button.on{background:var(--vino);color:var(--amarillo)}
+main{display:block;padding:24px 32px 56px;max-width:900px;margin:0 auto}
+@media(max-width:900px){main{padding:20px 16px 40px}header{padding:16px}nav{padding:14px 16px 0}header::after,header::before{display:none}}
 section.panel{display:none}section.panel.on{display:block}
-h2{font:700 18px Arial,sans-serif;color:var(--verde);margin:0 0 4px}
-h3{font:700 15px Arial,sans-serif;margin:22px 0 8px;color:var(--verde)}
-p.ayuda{margin:0 0 14px;color:var(--gris);font-size:14px}
-form{border:1px solid var(--linea);padding:16px;margin-bottom:16px}
-.fila{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
+h2{font:400 30px/1.1 var(--serif);color:var(--vino);margin:0 0 6px}
+h2::after{content:"";display:block;width:54px;height:10px;border-radius:999px;background:var(--amarillo);margin-top:8px}
+h3{font:800 13px var(--sans);letter-spacing:1.5px;text-transform:uppercase;margin:24px 0 8px;color:var(--vino);display:flex;align-items:center;gap:10px}
+h3::before{content:"";width:14px;height:14px;border-radius:50%;background:var(--celeste);border:2px solid var(--vino);flex:none}
+p.ayuda{margin:14px 0 18px;color:var(--gris);font-size:15px;max-width:60ch}
+form{background:var(--crema);border:2px solid var(--vino);border-radius:26px;padding:24px;margin-bottom:20px;box-shadow:7px 7px 0 var(--celeste)}
+.fila{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
 .fila .ancho{grid-column:1/-1}
-label.c{display:block;font-size:13px;font-weight:600;color:var(--gris)}
-input,select,textarea{width:100%;padding:8px;border:1px solid #b9c6bd;border-radius:3px;font:inherit;margin-top:3px;background:#fff}
-textarea{min-height:60px;resize:vertical}
-button.p,button.s{padding:9px 16px;border-radius:3px;font:600 14px Arial,sans-serif;cursor:pointer;border:1px solid var(--verde)}
-button.p{background:var(--verde);color:#fff;margin-top:12px}
-button.p:hover{background:var(--verde2)}
-button.s{background:#fff;color:var(--verde);padding:5px 10px;font-size:13px;margin:0 4px 4px 0}
-button.s:hover{background:var(--suave)}
-button.s.mal{color:var(--rojo);border-color:var(--rojo)}
-table{border-collapse:collapse;width:100%;font-size:14px}
-th,td{border-bottom:1px solid var(--linea);padding:8px 6px;text-align:left;vertical-align:top}
-th{font:700 12px Arial,sans-serif;color:var(--gris);text-transform:uppercase}
-.est{font-weight:700;font-size:12px;padding:2px 8px;border-radius:3px;background:var(--suave);color:var(--verde)}
-.est.REALIZADA{background:#dff0e4}.est.CANCELADA{background:#f6dcd7;color:var(--rojo)}.est.CONFIRMADA{background:#e3ecf6;color:#25507a}
-aside h2{margin-bottom:8px}
-#log{border:1px solid var(--linea);background:#fafcfb;max-height:78vh;overflow:auto}
-#log .vacio{padding:16px;color:var(--gris)}
-.r{border-bottom:1px solid var(--linea);padding:10px 12px}
-.r .cab{display:flex;gap:8px;align-items:center;font:700 13px Arial,sans-serif;flex-wrap:wrap}
-.cod{padding:1px 8px;border-radius:3px;color:#fff}
-.ok{background:var(--verde2)}.err{background:var(--rojo)}
-.r .rol{color:var(--gris);font-weight:400;margin-left:auto}
-.r .hdr{font-size:12px;color:var(--ambar);margin-top:4px}
-.r pre{margin:6px 0 0;font:12px/1.4 Consolas,monospace;white-space:pre-wrap;word-break:break-word;color:var(--texto)}
-.msg{margin-top:12px;padding:10px 12px;border-left:4px solid var(--verde2);background:var(--suave);font-size:14px}
-.msg.mal{border-color:var(--rojo);background:#fbeae7}
-.pasos{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0;font-size:13px}
-.pasos span{padding:2px 8px;border:1px solid var(--linea);color:var(--gris)}
-.pasos span.hecho{border-color:var(--verde2);color:var(--verde);font-weight:700}
+label.c{display:block;font:800 12px var(--sans);letter-spacing:.6px;text-transform:uppercase;color:var(--vino)}
+input,select,textarea{width:100%;padding:10px 14px;border:2px solid var(--vino);border-radius:999px;font:600 15px var(--sans);margin-top:5px;background:#fff;color:var(--vino)}
+input:focus,select:focus,textarea:focus{outline:0;background:var(--amarillo);box-shadow:0 0 0 3px var(--celeste)}
+input::placeholder{color:#b39f9a;font-weight:400}
+button.p,button.s{font:800 14px var(--sans);cursor:pointer;border:2px solid var(--vino);border-radius:999px;transition:transform .08s,box-shadow .08s}
+button.p{background:var(--amarillo);color:var(--vino);padding:12px 26px;margin-top:18px;box-shadow:4px 4px 0 var(--vino);font-size:15px}
+button.p:hover,button.s:hover{transform:translate(-1px,-1px)}
+button.p:active,button.s:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--vino)}
+button.s{background:var(--celeste);color:var(--vino);padding:6px 14px;font-size:13px;margin:0 6px 6px 0;box-shadow:2px 2px 0 var(--vino)}
+button.s.mal{background:#fff;color:var(--rojo);border-color:var(--rojo);box-shadow:2px 2px 0 var(--rojo)}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:15px;background:var(--crema);border:2px solid var(--vino);border-radius:22px;overflow:hidden;box-shadow:6px 6px 0 var(--celeste);margin-top:12px}
+th,td{border-bottom:1px solid var(--linea);padding:11px 14px;text-align:left;vertical-align:middle}
+tr:last-child td{border-bottom:0}
+th{font:800 11px var(--sans);color:var(--amarillo);background:var(--vino);text-transform:uppercase;letter-spacing:1.2px}
+.est{font:800 11px var(--sans);letter-spacing:.8px;padding:3px 11px;border-radius:999px;background:var(--amarillo);color:var(--vino);border:1.5px solid var(--vino)}
+.est.REALIZADA{background:var(--vino);color:var(--amarillo)}.est.CANCELADA{background:#fff;color:var(--rojo);border-color:var(--rojo)}.est.CONFIRMADA{background:var(--celeste)}
+aside{margin-top:8px}
+.apilog{border:1.5px solid var(--linea);border-radius:16px;background:rgba(255,253,248,.85)}
+.apilog>summary{cursor:pointer;list-style:none;padding:10px 16px;font:700 13px var(--sans);color:var(--gris);display:flex;align-items:center;gap:10px}
+.apilog>summary::-webkit-details-marker,.r>summary::-webkit-details-marker{display:none}
+.apilog>summary::before,.r>summary::before{content:"▸";font-size:11px;transition:transform .1s}
+.apilog[open]>summary::before,.r[open]>summary::before{transform:rotate(90deg)}
+#ultimo{margin-left:auto;font:600 12px var(--mono)}
+#log{border-top:1px solid var(--linea);max-height:55vh;overflow:auto}
+#log .vacio{padding:12px 16px;color:var(--gris);font-size:13px}
+.r{border-bottom:1px solid var(--linea)}
+.r:last-child{border-bottom:0}
+.r>summary{cursor:pointer;list-style:none;display:flex;gap:10px;align-items:center;padding:7px 16px;font:500 12px var(--mono);color:var(--vino)}
+.r>summary:hover{background:var(--amarillo)}
+.cod{padding:1px 8px;border-radius:999px;color:var(--vino);font-weight:700;font-size:11px}
+.ok{background:var(--amarillo)}.err{background:#ff9d8a}
+.r .rol{color:var(--gris);margin-left:auto}
+.r .hdr{font:500 11px var(--mono);color:var(--rojo);padding:0 16px 4px}
+.r pre{margin:0;padding:6px 16px 12px;font:400 11px/1.5 var(--mono);white-space:pre-wrap;word-break:break-word;color:var(--vino);background:rgba(175,207,254,.18)}
+.msg{margin-top:16px;padding:14px 18px;border:2px solid var(--vino);border-radius:22px;background:var(--amarillo);font-weight:700;box-shadow:4px 4px 0 var(--vino)}
+.msg.mal{background:#ffd3c9}
+.pasos{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 0;font:800 12px var(--sans)}
+.pasos span{padding:4px 12px;border:2px dashed #b39f9a;border-radius:999px;color:var(--gris)}
+.pasos span.hecho{border:2px solid var(--vino);background:var(--celeste);color:var(--vino)}
+.sesion{display:flex;align-items:center;gap:12px;font:700 13px var(--sans);color:var(--celeste);position:relative;z-index:1}
+.sesion b{display:block;color:var(--papel);font-size:15px}
+.sesion button{background:transparent;color:var(--amarillo);border:2px solid var(--amarillo);border-radius:999px;padding:7px 14px;font:800 13px var(--sans);cursor:pointer}
+.sesion button:hover{background:var(--amarillo);color:var(--vino)}
+#login{position:fixed;inset:0;z-index:50;background:var(--papel);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
+#login::before{content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:var(--celeste);left:-120px;top:-120px;opacity:.7}
+#login::after{content:"";position:absolute;width:300px;height:300px;border-radius:50%;background:var(--amarillo);right:-90px;bottom:-90px}
+#login form{position:relative;z-index:1;width:100%;max-width:460px;margin:0;text-align:left}
+#login .logo{margin-bottom:14px}
+.usuarios{display:grid;gap:8px;margin-top:6px}
+.usuarios label{display:block;cursor:pointer}
+.usuarios input{position:absolute;opacity:0;width:0;height:0}
+.usuarios span{display:block;border:2px solid var(--vino);border-radius:18px;padding:10px 16px;font:600 13px var(--sans);color:var(--gris);background:#fff}
+.usuarios b{display:block;font:800 15px var(--sans);color:var(--vino)}
+.usuarios input:checked+span{background:var(--amarillo);color:var(--vino);box-shadow:3px 3px 0 var(--vino)}
+.usuarios input:focus-visible+span{box-shadow:0 0 0 3px var(--celeste)}
 </style>
 </head>
 <body>
 <header>
-  <h1>VetCare 24 · Clínica veterinaria</h1>
-  <label>Rol de la solicitud
-    <select id="rol">
-      <option value="auto">Automático (según la acción)</option>
-      <option value="recepcion">recepcion</option>
-      <option value="veterinario">veterinario</option>
-      <option value="personal_clinico">personal_clinico</option>
-      <option value="responsable">responsable</option>
-      <option value="">(sin rol: probar error 401)</option>
-    </select>
-  </label>
+  <div class="logo"><svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><g fill='#530200'><ellipse cx='13' cy='28' rx='6.5' ry='8.5' transform='rotate(-18 13 28)'/><ellipse cx='26' cy='15' rx='6.5' ry='9'/><ellipse cx='40' cy='15' rx='6.5' ry='9'/><ellipse cx='52' cy='28' rx='6.5' ry='8.5' transform='rotate(18 52 28)'/><path d='M32 29c-9 0-18 9-18 17 0 6 5 9 10 8 3-1 5-2 8-2s5 1 8 2c5 1 10-2 10-8 0-8-9-17-18-17z'/></g></svg></div>
+  <h1><small>Clínica veterinaria</small>VetCare 24</h1>
+  <select id="rol" hidden><option value="auto">auto</option><option value="recepcion">recepcion</option><option value="veterinario">veterinario</option><option value="personal_clinico">personal_clinico</option><option value="responsable">responsable</option><option value="">sin rol</option></select>
+  <div class="sesion" id="sesion" hidden>
+    <span>Sesión<b id="sesion-nombre"></b></span>
+    <button type="button" id="btn-salir">Cerrar sesión</button>
+  </div>
 </header>
 <nav id="tabs">
   <button data-t="cita" class="on">Agendar cita</button>
@@ -172,11 +210,28 @@ aside h2{margin-bottom:8px}
 
 </div>
 <aside>
-  <h2>Respuesta de la API</h2>
-  <div id="log"><div class="vacio">Aquí aparece cada solicitud con su código de estado, el rol que se usó y la respuesta.</div></div>
+  <details class="apilog" id="apilog">
+    <summary>Respuestas de la API <span id="ultimo"></span></summary>
+    <div id="log"><div class="vacio">Aquí aparece cada solicitud con su código, el rol usado y la respuesta.</div></div>
+  </details>
 </aside>
 </main>
 
+<div id="login">
+  <form id="f-login">
+    <div class="logo"><svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><g fill='#530200'><ellipse cx='13' cy='28' rx='6.5' ry='8.5' transform='rotate(-18 13 28)'/><ellipse cx='26' cy='15' rx='6.5' ry='9'/><ellipse cx='40' cy='15' rx='6.5' ry='9'/><ellipse cx='52' cy='28' rx='6.5' ry='8.5' transform='rotate(18 52 28)'/><path d='M32 29c-9 0-18 9-18 17 0 6 5 9 10 8 3-1 5-2 8-2s5 1 8 2c5 1 10-2 10-8 0-8-9-17-18-17z'/></g></svg></div>
+    <h2>Iniciar sesión</h2>
+    <p class="ayuda">Elige con qué usuario vas a trabajar. Cada usuario tiene permisos distintos en la API.</p>
+    <div class="usuarios">
+      <label><input type="radio" name="usr" value="auto" checked><span><b>Demostración</b>Usa el rol que corresponde a cada acción</span></label>
+      <label><input type="radio" name="usr" value="recepcion"><span><b>Recepción</b>Citas, cobro y documentación</span></label>
+      <label><input type="radio" name="usr" value="veterinario"><span><b>Veterinario</b>Notas, recetas, vacunas y altas</span></label>
+      <label><input type="radio" name="usr" value="personal_clinico"><span><b>Personal clínico</b>Monitoreo y atención de emergencias</span></label>
+      <label><input type="radio" name="usr" value="responsable"><span><b>Responsable</b>Consultas y reportes</span></label>
+    </div>
+    <button class="p" type="submit">Entrar</button>
+  </form>
+</div>
 <script>
 const BASE = (new URLSearchParams(location.search)).get('api') || '';
 const $ = (s, r=document) => r.querySelector(s);
@@ -194,9 +249,9 @@ $('#tabs').addEventListener('click', e => {
 });
 
 // ---- cliente de la API
-async function api(metodo, ruta, rolAuto, cuerpo){
+async function api(metodo, ruta, rolAuto, cuerpo, forzar){
   const manual = $('#rol').value;
-  const rol = manual==='auto' ? rolAuto : manual;
+  const rol = (forzar || manual==='auto') ? rolAuto : manual;
   const h = {'Accept':'application/json'};
   if(rol) h['X-Rol'] = rol;
   if(cuerpo!==undefined) h['Content-Type']='application/json';
@@ -214,10 +269,11 @@ function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt
 function registrar(m,ruta,rol,st,datos,cab){
   const log=$('#log'); if(log.querySelector('.vacio')) log.innerHTML='';
   const ok=st>=200&&st<300;
-  const d=document.createElement('div'); d.className='r';
+  const d=document.createElement('details'); d.className='r';
   let extra=''; if(cab.codigo||cab.motivos) extra=`<div class="hdr">X-Codigo-Error: ${esc(cab.codigo||'')}${cab.motivos?' · X-Motivos: '+esc(cab.motivos):''}</div>`;
-  d.innerHTML=`<div class="cab"><span class="cod ${ok?'ok':'err'}">${st||'ERR'}</span><span>${m} ${esc(ruta)}</span><span class="rol">X-Rol: ${esc(rol||'(ninguno)')}</span></div>${extra}<pre>${esc(JSON.stringify(datos,null,2))}</pre>`;
+  d.innerHTML=`<summary><span class="cod ${ok?'ok':'err'}">${st||'ERR'}</span><span>${m} ${esc(ruta)}</span><span class="rol">${esc(rol||'sin rol')}</span></summary>${extra}<pre>${esc(JSON.stringify(datos,null,2))}</pre>`;
   log.prepend(d);
+  $('#ultimo').innerHTML=`<span class="cod ${ok?'ok':'err'}">${st||'ERR'}</span> ${m} ${esc(ruta)}`;
 }
 function mensaje(el,r,okTxt){
   const msg = r.ok ? okTxt : ((r.datos&&r.datos.error&&r.datos.error.mensaje)||'La operación no se pudo completar.')+(r.cab.codigo?` (${r.cab.codigo})`:'');
@@ -226,12 +282,24 @@ function mensaje(el,r,okTxt){
 const num=(v)=>v===''?null:Number(v);
 
 // ---- catálogo
-(async()=>{
-  const r=await api('GET','/servicios','recepcion');
+async function cargarCatalogo(){
+  const r=await api('GET','/servicios','recepcion',undefined,true);
   const sel=$('#sel-serv');
   if(r.ok) sel.innerHTML=r.datos.filter(s=>s.habilitado).map(s=>`<option value="${esc(s.servicio_id)}">${esc(s.servicio_id)} · ${esc(s.descripcion)} · $${esc(s.precio_mxn)}</option>`).join('');
   else sel.innerHTML='<option value="">No se pudo cargar el catálogo</option>';
-})();
+}
+
+// ---- sesión
+const NOMBRES={auto:'Demostración',recepcion:'Recepción',veterinario:'Veterinario',personal_clinico:'Personal clínico',responsable:'Responsable'};
+function leerSesion(){ try{return sessionStorage.getItem('vc_usuario')}catch{return null} }
+function iniciar(u){
+  try{sessionStorage.setItem('vc_usuario',u)}catch{}
+  $('#rol').value=u; $('#sesion-nombre').textContent=NOMBRES[u]||u; $('#sesion').hidden=false; $('#login').style.display='none';
+  cargarCatalogo();
+}
+$('#f-login').addEventListener('submit',e=>{ e.preventDefault(); iniciar(new FormData(e.target).get('usr')); });
+$('#btn-salir').onclick=()=>{ try{sessionStorage.removeItem('vc_usuario')}catch{}; $('#log').innerHTML='<div class="vacio">Aquí aparece cada solicitud con su código, el rol usado y la respuesta.</div>'; $('#ultimo').innerHTML=''; $('#sesion').hidden=true; $('#login').style.display='flex'; };
+{ const u=leerSesion(); if(u&&NOMBRES[u]) iniciar(u); }
 
 // ---- agendar cita
 $('#f-cita').addEventListener('submit', async e=>{
