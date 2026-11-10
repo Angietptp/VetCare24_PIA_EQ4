@@ -95,6 +95,19 @@ aside{margin-top:8px}
 .usuarios b{display:block;font:800 15px var(--sans);color:var(--vino)}
 .usuarios input:checked+span{background:var(--amarillo);color:var(--vino);box-shadow:3px 3px 0 var(--vino)}
 .usuarios input:focus-visible+span{box-shadow:0 0 0 3px var(--celeste)}
+.exp{background:var(--crema);border:2px solid var(--vino);border-radius:26px;padding:22px 24px;box-shadow:7px 7px 0 var(--amarillo);margin:20px 0}
+.exp-cab{border-bottom:2px dashed #d9cfc4;padding-bottom:12px;margin-bottom:6px}
+.exp-t{font:800 12px var(--sans);letter-spacing:1.5px;text-transform:uppercase;color:var(--gris)}
+.exp-n{font:400 30px/1.1 var(--serif);color:var(--vino);margin:2px 0 8px}
+.exp-datos{display:flex;flex-wrap:wrap;gap:6px 18px;font:700 14px var(--sans)}
+.exp-datos span{display:block;font:800 10px var(--sans);letter-spacing:1px;text-transform:uppercase;color:var(--gris)}
+.exp h4{font:800 13px var(--sans);letter-spacing:1.2px;text-transform:uppercase;color:var(--vino);margin:18px 0 8px;background:var(--celeste);display:inline-block;padding:3px 12px;border-radius:999px}
+.exp-i{border-left:4px solid var(--amarillo);padding:4px 0 4px 12px;margin:8px 0}
+.exp-i p{margin:2px 0;color:var(--gris);font-size:14px}
+.exp-i small{display:block;color:var(--gris);font-size:12px;margin-top:2px}
+.exp-dosis{background:var(--amarillo);border-radius:999px;padding:1px 10px;font-weight:700;font-size:13px}
+.exp-vacio{margin:6px 0;color:var(--gris);font-size:14px}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -171,6 +184,7 @@ aside{margin-top:8px}
     <h3>Consultas</h3>
     <button class="s" type="button" data-a="expediente">Ver expediente</button>
   </form>
+  <div id="res-exp"></div>
 </section>
 
 <section class="panel" id="p-emer">
@@ -347,6 +361,33 @@ $('#tabla-citas').addEventListener('click', async e=>{
   mensaje(res,r,'Operación realizada.'); cargarCitas();
 });
 
+
+// ---- vista de expediente
+const fechaHora=(iso)=>{ try{return new Date(iso).toLocaleString('es-MX',{dateStyle:'medium',timeStyle:'short'})}catch{return iso||''} };
+async function verExpediente(mid){
+  const el=$('#res-exp'); el.innerHTML='';
+  const ex=await api('GET',`/mascotas/${mid}/expediente`,'veterinario');
+  if(!ex.ok){ mensaje(el,ex); return }
+  const m=await api('GET',`/mascotas/${mid}`,'veterinario');
+  const v=await api('GET',`/mascotas/${mid}/vacunaciones`,'veterinario');
+  const e=ex.datos, masc=m.ok?m.datos:null, vacs=v.ok?v.datos:[];
+  const dato=(t,x)=>x!==null&&x!==undefined&&x!==''?`<div><span>${t}</span>${esc(x)}</div>`:'';
+  const lista=(arr,vacio,f)=>arr&&arr.length?arr.map(f).join(''):`<p class="exp-vacio">${vacio}</p>`;
+  el.innerHTML=`<div class="exp">
+    <div class="exp-cab"><div class="exp-t">Expediente clínico</div>
+      <div class="exp-n">${esc(masc?masc.nombre:e.mascota_id)}</div>
+      <div class="exp-datos">${dato('ID',e.mascota_id)}${masc?dato('Especie',masc.especie)+dato('Raza',masc.raza)+dato('Sexo',masc.sexo)+dato('Peso',masc.peso_kg?masc.peso_kg+' kg':'')+dato('Alergias',masc.alergias)+dato('Propietario',masc.propietario_id):''}</div></div>
+    <h4>Notas clínicas (${e.notas.length})</h4>
+    ${lista(e.notas,'Sin notas registradas.',n=>`<div class="exp-i"><b>${esc(n.diagnostico)}</b>${n.indicaciones?`<p>${esc(n.indicaciones)}</p>`:''}<small>${fechaHora(n.registrada_en)}${n.cita_id?' · cita '+esc(n.cita_id):''}</small></div>`)}
+    <h4>Recetas (${e.recetas.length})</h4>
+    ${lista(e.recetas,'Sin recetas emitidas.',r=>`<div class="exp-i">${r.medicamentos.map(x=>`<b>${esc(x.nombre)}</b> <span class="exp-dosis">${esc(x.dosis)}</span>${x.indicaciones?`<p>${esc(x.indicaciones)}</p>`:''}`).join('<br>')}<small>${esc(r.receta_id)} · ${fechaHora(r.registrada_en)}${r.cita_id?' · cita '+esc(r.cita_id):''}</small></div>`)}
+    <h4>Órdenes de estudio (${e.ordenes_de_estudio.length})</h4>
+    ${lista(e.ordenes_de_estudio,'Sin órdenes de estudio.',o=>`<div class="exp-i"><b>${esc(o.estudio)}</b>${o.indicaciones?`<p>${esc(o.indicaciones)}</p>`:''}<small>${esc(o.orden_id)} · ${fechaHora(o.registrada_en)}${o.cita_id?' · cita '+esc(o.cita_id):''}</small></div>`)}
+    <h4>Vacunación (${vacs.length})</h4>
+    ${lista(vacs,'Sin vacunas registradas.',x=>`<div class="exp-i"><b>${esc(x.vacuna)}</b><small>Aplicada el ${esc(x.fecha_aplicacion)}${x.lote?' · lote '+esc(x.lote):''}</small></div>`)}
+  </div>`;
+}
+
 // ---- expediente
 $('#f-exp').addEventListener('click', async e=>{
   const b=e.target.closest('button[data-a]'); if(!b) return; const f=$('#f-exp'); const v=Object.fromEntries(new FormData(f));
@@ -358,7 +399,7 @@ $('#f-exp').addEventListener('click', async e=>{
     case 'orden': await api('POST',`/mascotas/${mid}/ordenes-estudio`,'veterinario',{estudio:v.est,cita_id:cita}); break;
     case 'vacuna': await api('POST',`/mascotas/${mid}/vacunaciones`,'veterinario',{vacuna:v.vac,fecha_aplicacion:v.vfecha}); break;
     case 'seg': await api('GET',`/mascotas/${mid}/vacunaciones/seguimiento`,'veterinario'); break;
-    case 'expediente': await api('GET',`/mascotas/${mid}/expediente`,'veterinario'); break;
+    case 'expediente': await verExpediente(mid); break;
   }
 });
 
