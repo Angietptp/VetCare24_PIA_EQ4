@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VetCare 24</title>
+<style>
+:root{--verde:#1d5632;--verde2:#2f7d55;--suave:#eef6f0;--linea:#cfd9d2;--texto:#1e2b24;--gris:#5b6b62;--rojo:#b3402f;--ambar:#b9770e}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 Calibri,Arial,sans-serif;color:var(--texto);background:#fff}
+header{background:var(--verde);color:#fff;padding:12px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{font:700 20px Arial,sans-serif;margin:0;flex:1}
+header label{font-size:13px;opacity:.9}
+header select{padding:6px 8px;border:0;border-radius:3px;font:inherit}
+nav{display:flex;gap:2px;background:var(--suave);border-bottom:1px solid var(--linea);padding:0 24px;overflow-x:auto}
+nav button{border:0;background:none;padding:12px 16px;font:600 14px Arial,sans-serif;color:var(--gris);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+nav button.on{color:var(--verde);border-bottom-color:var(--verde)}
+main{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px;padding:24px;max-width:1300px;margin:0 auto}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+section.panel{display:none}section.panel.on{display:block}
+h2{font:700 18px Arial,sans-serif;color:var(--verde);margin:0 0 4px}
+h3{font:700 15px Arial,sans-serif;margin:22px 0 8px;color:var(--verde)}
+p.ayuda{margin:0 0 14px;color:var(--gris);font-size:14px}
+form{border:1px solid var(--linea);padding:16px;margin-bottom:16px}
+.fila{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
+.fila .ancho{grid-column:1/-1}
+label.c{display:block;font-size:13px;font-weight:600;color:var(--gris)}
+input,select,textarea{width:100%;padding:8px;border:1px solid #b9c6bd;border-radius:3px;font:inherit;margin-top:3px;background:#fff}
+textarea{min-height:60px;resize:vertical}
+button.p,button.s{padding:9px 16px;border-radius:3px;font:600 14px Arial,sans-serif;cursor:pointer;border:1px solid var(--verde)}
+button.p{background:var(--verde);color:#fff;margin-top:12px}
+button.p:hover{background:var(--verde2)}
+button.s{background:#fff;color:var(--verde);padding:5px 10px;font-size:13px;margin:0 4px 4px 0}
+button.s:hover{background:var(--suave)}
+button.s.mal{color:var(--rojo);border-color:var(--rojo)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--linea);padding:8px 6px;text-align:left;vertical-align:top}
+th{font:700 12px Arial,sans-serif;color:var(--gris);text-transform:uppercase}
+.est{font-weight:700;font-size:12px;padding:2px 8px;border-radius:3px;background:var(--suave);color:var(--verde)}
+.est.REALIZADA{background:#dff0e4}.est.CANCELADA{background:#f6dcd7;color:var(--rojo)}.est.CONFIRMADA{background:#e3ecf6;color:#25507a}
+aside h2{margin-bottom:8px}
+#log{border:1px solid var(--linea);background:#fafcfb;max-height:78vh;overflow:auto}
+#log .vacio{padding:16px;color:var(--gris)}
+.r{border-bottom:1px solid var(--linea);padding:10px 12px}
+.r .cab{display:flex;gap:8px;align-items:center;font:700 13px Arial,sans-serif;flex-wrap:wrap}
+.cod{padding:1px 8px;border-radius:3px;color:#fff}
+.ok{background:var(--verde2)}.err{background:var(--rojo)}
+.r .rol{color:var(--gris);font-weight:400;margin-left:auto}
+.r .hdr{font-size:12px;color:var(--ambar);margin-top:4px}
+.r pre{margin:6px 0 0;font:12px/1.4 Consolas,monospace;white-space:pre-wrap;word-break:break-word;color:var(--texto)}
+.msg{margin-top:12px;padding:10px 12px;border-left:4px solid var(--verde2);background:var(--suave);font-size:14px}
+.msg.mal{border-color:var(--rojo);background:#fbeae7}
+.pasos{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0;font-size:13px}
+.pasos span{padding:2px 8px;border:1px solid var(--linea);color:var(--gris)}
+.pasos span.hecho{border-color:var(--verde2);color:var(--verde);font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <h1>VetCare 24 · Clínica veterinaria</h1>
+  <label>Rol de la solicitud
+    <select id="rol">
+      <option value="auto">Automático (según la acción)</option>
+      <option value="recepcion">recepcion</option>
+      <option value="veterinario">veterinario</option>
+      <option value="personal_clinico">personal_clinico</option>
+      <option value="responsable">responsable</option>
+      <option value="">(sin rol: probar error 401)</option>
+    </select>
+  </label>
+</header>
+<nav id="tabs">
+  <button data-t="cita" class="on">Agendar cita</button>
+  <button data-t="citas">Citas</button>
+  <button data-t="clinico">Expediente y vacunas</button>
+  <button data-t="emer">Emergencias</button>
+  <button data-t="hosp">Hospitalización</button>
+  <button data-t="rep">Reporte</button>
+</nav>
+<main>
+<div>
+
+<section class="panel on" id="p-cita">
+  <h2>Agendar una cita</h2>
+  <p class="ayuda">Registra al propietario y a su mascota, y solicita la cita. Si ya existen, escribe sus identificadores y se omite ese registro.</p>
+  <form id="f-cita">
+    <div class="fila">
+      <label class="c">Propietario (nombre)<input name="pnombre" placeholder="Ana López"></label>
+      <label class="c">ID de propietario existente<input name="pid" placeholder="opcional"></label>
+      <label class="c">Mascota (nombre)<input name="mnombre" placeholder="Firulais"></label>
+      <label class="c">Especie<input name="especie" placeholder="Perro" value="Perro"></label>
+      <label class="c ancho">ID de mascota existente<input name="mid" placeholder="opcional"></label>
+      <label class="c">Servicio<select name="servicio" id="sel-serv"></select></label>
+      <label class="c">Cantidad<input name="cantidad" type="number" min="1" value="1"></label>
+      <label class="c">Fecha de solicitud<input name="fecha" type="date"></label>
+      <label class="c">¿Autorizada?<select name="aut"><option value="true">Sí</option><option value="false">No</option></select></label>
+    </div>
+    <button class="p" type="submit">Solicitar cita</button>
+    <div class="pasos" id="pasos"></div>
+  </form>
+  <div id="res-cita"></div>
+</section>
+
+<section class="panel" id="p-citas">
+  <h2>Citas registradas</h2>
+  <p class="ayuda">Cada botón usa el rol que corresponde a la acción: recepción confirma, cancela y cobra; el veterinario realiza la cita.</p>
+  <button class="s" id="rec-citas">Actualizar lista</button>
+  <div id="tabla-citas"></div>
+  <div id="res-citas"></div>
+</section>
+
+<section class="panel" id="p-clinico">
+  <h2>Expediente, recetas y vacunas</h2>
+  <p class="ayuda">Todas las acciones son del veterinario. Escribe el ID de la mascota.</p>
+  <form id="f-exp">
+    <div class="fila">
+      <label class="c ancho">ID de la mascota<input name="mid" required></label>
+      <label class="c ancho">Cita realizada (opcional)<input name="cita"></label>
+    </div>
+    <h3>Nota clínica</h3>
+    <div class="fila"><label class="c">Diagnóstico<input name="diag"></label><label class="c">Indicaciones<input name="ind"></label></div>
+    <button class="s" type="button" data-a="nota">Guardar nota</button>
+    <h3>Receta</h3>
+    <div class="fila"><label class="c">Medicamento<input name="med" value="Amoxicilina"></label><label class="c">Dosis<input name="dosis" value="250 mg cada 12 horas"></label></div>
+    <button class="s" type="button" data-a="receta">Emitir receta</button>
+    <h3>Orden de estudio</h3>
+    <div class="fila"><label class="c ancho">Estudio<input name="est" value="Biometría hemática"></label></div>
+    <button class="s" type="button" data-a="orden">Emitir orden</button>
+    <h3>Vacunación</h3>
+    <div class="fila"><label class="c">Vacuna<input name="vac" value="Rabia"></label><label class="c">Fecha de aplicación<input name="vfecha" type="date"></label></div>
+    <button class="s" type="button" data-a="vacuna">Registrar vacuna</button>
+    <button class="s" type="button" data-a="seg">Ver seguimiento</button>
+    <h3>Consultas</h3>
+    <button class="s" type="button" data-a="expediente">Ver expediente</button>
+  </form>
+</section>
+
+<section class="panel" id="p-emer">
+  <h2>Emergencias</h2>
+  <p class="ayuda">Recepción registra la emergencia sin cita; el personal clínico inicia la atención.</p>
+  <form id="f-emer">
+    <div class="fila">
+      <label class="c ancho">Motivo<input name="motivo" value="Atropello" required></label>
+      <label class="c ancho">ID de mascota (opcional)<input name="mid"></label>
+    </div>
+    <button class="p" type="submit">Registrar emergencia</button>
+  </form>
+  <button class="s" id="rec-emer">Actualizar lista</button>
+  <div id="tabla-emer"></div>
+</section>
+
+<section class="panel" id="p-hosp">
+  <h2>Hospitalización</h2>
+  <p class="ayuda">Ingreso, hoja de monitoreo y alta con resumen.</p>
+  <form id="f-hosp">
+    <div class="fila">
+      <label class="c">ID de mascota<input name="mid" required></label>
+      <label class="c">Motivo<input name="motivo" value="Observación" required></label>
+    </div>
+    <button class="p" type="submit">Ingresar a hospitalización</button>
+  </form>
+  <button class="s" id="rec-hosp">Actualizar lista</button>
+  <div id="tabla-hosp"></div>
+</section>
+
+<section class="panel" id="p-rep">
+  <h2>Reporte de operación</h2>
+  <p class="ayuda">Lo consulta el responsable. Solo lectura.</p>
+  <button class="p" id="btn-rep">Generar reporte</button>
+  <div id="res-rep"></div>
+</section>
+
+</div>
+<aside>
+  <h2>Respuesta de la API</h2>
+  <div id="log"><div class="vacio">Aquí aparece cada solicitud con su código de estado, el rol que se usó y la respuesta.</div></div>
+</aside>
+</main>
+
+<script>
+const BASE = (new URLSearchParams(location.search)).get('api') || '';
+const $ = (s, r=document) => r.querySelector(s);
+const hoy = new Date().toISOString().slice(0,10);
+document.querySelectorAll('input[type=date]').forEach(i => i.value = hoy);
+
+// ---- tabs
+$('#tabs').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x===b));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id==='p-'+b.dataset.t));
+  if(b.dataset.t==='citas') cargarCitas();
+  if(b.dataset.t==='emer') cargarEmer();
+  if(b.dataset.t==='hosp') cargarHosp();
+});
+
+// ---- cliente de la API
+async function api(metodo, ruta, rolAuto, cuerpo){
+  const manual = $('#rol').value;
+  const rol = manual==='auto' ? rolAuto : manual;
+  const h = {'Accept':'application/json'};
+  if(rol) h['X-Rol'] = rol;
+  if(cuerpo!==undefined) h['Content-Type']='application/json';
+  let st=0, datos=null, cab={};
+  try{
+    const r = await fetch(BASE+ruta,{method:metodo,headers:h,body:cuerpo!==undefined?JSON.stringify(cuerpo):undefined});
+    st=r.status;
+    cab={codigo:r.headers.get('X-Codigo-Error'),motivos:r.headers.get('X-Motivos')};
+    const t=await r.text(); try{datos=t?JSON.parse(t):null}catch{datos=t}
+  }catch(err){ datos={error:{mensaje:'No se pudo conectar con la API. '+err.message}}; }
+  registrar(metodo,ruta,rol,st,datos,cab);
+  return {ok:st>=200&&st<300,st,datos,cab};
+}
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function registrar(m,ruta,rol,st,datos,cab){
+  const log=$('#log'); if(log.querySelector('.vacio')) log.innerHTML='';
+  const ok=st>=200&&st<300;
+  const d=document.createElement('div'); d.className='r';
+  let extra=''; if(cab.codigo||cab.motivos) extra=`<div class="hdr">X-Codigo-Error: ${esc(cab.codigo||'')}${cab.motivos?' · X-Motivos: '+esc(cab.motivos):''}</div>`;
+  d.innerHTML=`<div class="cab"><span class="cod ${ok?'ok':'err'}">${st||'ERR'}</span><span>${m} ${esc(ruta)}</span><span class="rol">X-Rol: ${esc(rol||'(ninguno)')}</span></div>${extra}<pre>${esc(JSON.stringify(datos,null,2))}</pre>`;
+  log.prepend(d);
+}
+function mensaje(el,r,okTxt){
+  const msg = r.ok ? okTxt : ((r.datos&&r.datos.error&&r.datos.error.mensaje)||'La operación no se pudo completar.')+(r.cab.codigo?` (${r.cab.codigo})`:'');
+  el.innerHTML=`<div class="msg ${r.ok?'':'mal'}">${esc(msg)}</div>`;
+}
+const num=(v)=>v===''?null:Number(v);
+
+// ---- catálogo
+(async()=>{
+  const r=await api('GET','/servicios','recepcion');
+  const sel=$('#sel-serv');
+  if(r.ok) sel.innerHTML=r.datos.filter(s=>s.habilitado).map(s=>`<option value="${esc(s.servicio_id)}">${esc(s.servicio_id)} · ${esc(s.descripcion)} · $${esc(s.precio_mxn)}</option>`).join('');
+  else sel.innerHTML='<option value="">No se pudo cargar el catálogo</option>';
+})();
+
+// ---- agendar cita
+$('#f-cita').addEventListener('submit', async e=>{
+  e.preventDefault(); const f=e.target, v=Object.fromEntries(new FormData(f)); const res=$('#res-cita'); const pasos=$('#pasos'); res.innerHTML='';
+  const marca=(t,h)=>{pasos.innerHTML+=`<span class="${h?'hecho':''}">${h?'✓ ':''}${t}</span>`}; pasos.innerHTML='';
+  let pid=v.pid.trim(), mid=v.mid.trim();
+  if(!pid){
+    if(!v.pnombre.trim()){res.innerHTML='<div class="msg mal">Escribe el nombre del propietario o un ID existente.</div>';return}
+    const r=await api('POST','/propietarios','recepcion',{nombre:v.pnombre.trim()});
+    if(!r.ok){mensaje(res,r);return} pid=r.datos.propietario_id; marca('Propietario '+pid,true);
+  } else marca('Propietario '+pid,true);
+  if(!mid){
+    if(!v.mnombre.trim()||!v.especie.trim()){res.innerHTML='<div class="msg mal">Escribe nombre y especie de la mascota o un ID existente.</div>';return}
+    const r=await api('POST','/mascotas','recepcion',{propietario_id:pid,nombre:v.mnombre.trim(),especie:v.especie.trim()});
+    if(!r.ok){mensaje(res,r);return} mid=r.datos.mascota_id; marca('Mascota '+mid,true);
+  } else marca('Mascota '+mid,true);
+  const r=await api('POST','/citas','recepcion',{propietario_id:pid,mascota_id:mid,servicios:[{servicio_id:v.servicio,cantidad:parseInt(v.cantidad||'1',10)}],fecha_solicitud:v.fecha,autorizada:v.aut==='true'});
+  if(r.ok){ marca('Cita '+r.datos.cita_id,true); mensaje(res,r,`Cita ${r.datos.cita_id} creada en estado ${r.datos.estado}. Total: $${r.datos.total_mxn}. Continúa en la pestaña Citas para confirmarla.`);}
+  else mensaje(res,r);
+});
+
+// ---- citas
+async function cargarCitas(){
+  const r=await api('GET','/citas','recepcion'); const t=$('#tabla-citas');
+  if(!r.ok){mensaje($('#res-citas'),r);return}
+  if(!r.datos.length){t.innerHTML='<p class="ayuda">Todavía no hay citas.</p>';return}
+  t.innerHTML='<table><tr><th>Cita</th><th>Mascota</th><th>Estado</th><th>Total</th><th>Acciones</th></tr>'+r.datos.map(c=>{
+    let b='';
+    if(c.estado==='SOLICITADA') b+=`<button class="s" data-a="confirmar" data-id="${esc(c.cita_id)}">Confirmar</button>`;
+    if(c.estado==='CONFIRMADA') b+=`<button class="s" data-a="realizar" data-id="${esc(c.cita_id)}">Realizar (veterinario)</button>`;
+    if(c.estado==='SOLICITADA'||c.estado==='CONFIRMADA') b+=`<button class="s mal" data-a="cancelar" data-id="${esc(c.cita_id)}">Cancelar</button>`;
+    if(c.estado==='REALIZADA') b+=`<button class="s" data-a="cobrar" data-id="${esc(c.cita_id)}">Cobrar</button><button class="s" data-a="docs" data-id="${esc(c.cita_id)}">Documentación</button>`;
+    return `<tr><td>${esc(c.cita_id)}</td><td>${esc(c.mascota_id)}</td><td><span class="est ${esc(c.estado)}">${esc(c.estado)}</span></td><td>$${esc(c.total_mxn)}</td><td>${b}</td></tr>`}).join('')+'</table>';
+}
+$('#rec-citas').onclick=cargarCitas;
+$('#tabla-citas').addEventListener('click', async e=>{
+  const b=e.target.closest('button[data-a]'); if(!b) return; const id=encodeURIComponent(b.dataset.id); const res=$('#res-citas'); let r;
+  switch(b.dataset.a){
+    case 'confirmar': r=await api('POST',`/citas/${id}/confirmar`,'recepcion'); break;
+    case 'realizar': r=await api('POST',`/citas/${id}/realizar`,'veterinario'); break;
+    case 'cancelar': r=await api('POST',`/citas/${id}/cancelar`,'recepcion'); break;
+    case 'cobrar': { const m=prompt('Método de pago (efectivo, tarjeta, transferencia)','efectivo'); if(!m) return; r=await api('POST',`/citas/${id}/cobro`,'recepcion',{metodo:m}); break; }
+    case 'docs': r=await api('POST',`/citas/${id}/documentacion`,'recepcion'); break;
+  }
+  mensaje(res,r,'Operación realizada.'); cargarCitas();
+});
+
+// ---- expediente
+$('#f-exp').addEventListener('click', async e=>{
+  const b=e.target.closest('button[data-a]'); if(!b) return; const f=$('#f-exp'); const v=Object.fromEntries(new FormData(f));
+  if(!v.mid.trim()){alert('Escribe el ID de la mascota');return}
+  const mid=encodeURIComponent(v.mid.trim()); const cita=v.cita.trim()||null;
+  switch(b.dataset.a){
+    case 'nota': await api('POST',`/mascotas/${mid}/notas-clinicas`,'veterinario',{diagnostico:v.diag,indicaciones:v.ind||null,cita_id:cita}); break;
+    case 'receta': await api('POST',`/mascotas/${mid}/recetas`,'veterinario',{medicamentos:[{nombre:v.med,dosis:v.dosis}],cita_id:cita}); break;
+    case 'orden': await api('POST',`/mascotas/${mid}/ordenes-estudio`,'veterinario',{estudio:v.est,cita_id:cita}); break;
+    case 'vacuna': await api('POST',`/mascotas/${mid}/vacunaciones`,'veterinario',{vacuna:v.vac,fecha_aplicacion:v.vfecha}); break;
+    case 'seg': await api('GET',`/mascotas/${mid}/vacunaciones/seguimiento`,'veterinario'); break;
+    case 'expediente': await api('GET',`/mascotas/${mid}/expediente`,'veterinario'); break;
+  }
+});
+
+// ---- emergencias
+$('#f-emer').addEventListener('submit', async e=>{
+  e.preventDefault(); const v=Object.fromEntries(new FormData(e.target));
+  const cuerpo={motivo:v.motivo}; if(v.mid.trim()) cuerpo.mascota_id=v.mid.trim();
+  await api('POST','/emergencias','recepcion',cuerpo); cargarEmer();
+});
+async function cargarEmer(){
+  const r=await api('GET','/emergencias','recepcion'); const t=$('#tabla-emer'); if(!r.ok){t.innerHTML='';return}
+  if(!r.datos.length){t.innerHTML='<p class="ayuda">Sin emergencias registradas.</p>';return}
+  t.innerHTML='<table><tr><th>ID</th><th>Motivo</th><th>Estado</th><th></th></tr>'+r.datos.map(x=>`<tr><td>${esc(x.emergencia_id)}</td><td>${esc(x.motivo)}</td><td><span class="est">${esc(x.estado)}</span></td><td>${x.estado==='IDENTIFICADA'?`<button class="s" data-id="${esc(x.emergencia_id)}">Iniciar atención</button>`:''}</td></tr>`).join('')+'</table>';
+}
+$('#rec-emer').onclick=cargarEmer;
+$('#tabla-emer').addEventListener('click', async e=>{ const b=e.target.closest('button[data-id]'); if(!b) return; await api('POST',`/emergencias/${encodeURIComponent(b.dataset.id)}/iniciar-atencion`,'personal_clinico'); cargarEmer(); });
+
+// ---- hospitalización
+$('#f-hosp').addEventListener('submit', async e=>{ e.preventDefault(); const v=Object.fromEntries(new FormData(e.target)); await api('POST','/hospitalizaciones','veterinario',{mascota_id:v.mid.trim(),motivo:v.motivo}); cargarHosp(); });
+async function cargarHosp(){
+  const r=await api('GET','/hospitalizaciones','veterinario'); const t=$('#tabla-hosp'); if(!r.ok){t.innerHTML='';return}
+  if(!r.datos.length){t.innerHTML='<p class="ayuda">Sin hospitalizaciones registradas.</p>';return}
+  t.innerHTML='<table><tr><th>ID</th><th>Mascota</th><th>Estado</th><th>Acciones</th></tr>'+r.datos.map(x=>`<tr><td>${esc(x.hospitalizacion_id)}</td><td>${esc(x.mascota_id)}</td><td><span class="est">${esc(x.estado)}</span></td><td>${x.estado==='INGRESADA'?`<button class="s" data-a="mon" data-id="${esc(x.hospitalizacion_id)}">Agregar lectura</button><button class="s" data-a="alta" data-id="${esc(x.hospitalizacion_id)}">Dar de alta</button>`:''}</td></tr>`).join('')+'</table>';
+}
+$('#rec-hosp').onclick=cargarHosp;
+$('#tabla-hosp').addEventListener('click', async e=>{
+  const b=e.target.closest('button[data-a]'); if(!b) return; const id=encodeURIComponent(b.dataset.id);
+  if(b.dataset.a==='mon'){ const o=prompt('Observaciones','Estable'); if(!o) return; const tc=prompt('Temperatura °C (opcional)','38.5'); const fc=prompt('Frecuencia cardiaca (opcional)','90');
+    await api('POST',`/hospitalizaciones/${id}/monitoreo`,'personal_clinico',{observaciones:o,temperatura_c:tc?Number(tc):null,frecuencia_cardiaca:fc?parseInt(fc,10):null}); }
+  else { const o=prompt('Resumen de alta','Mejoría, sale con indicaciones'); if(!o) return; await api('POST',`/hospitalizaciones/${id}/alta`,'veterinario',{resumen_alta:o}); }
+  cargarHosp();
+});
+
+// ---- reporte
+$('#btn-rep').onclick=async()=>{
+  const r=await api('GET','/reportes/operacion','responsable'); const el=$('#res-rep');
+  if(!r.ok){mensaje(el,r);return}
+  const d=r.datos; const fila=(o)=>Object.keys(o||{}).length?Object.entries(o).map(([k,v])=>`${esc(k)}: ${esc(v)}`).join(' · '):'sin datos';
+  el.innerHTML=`<h3>Resumen</h3><table>
+  <tr><th>Citas por estado</th><td>${fila(d.citas_por_estado)}</td></tr>
+  <tr><th>Emergencias por estado</th><td>${fila(d.emergencias_por_estado)}</td></tr>
+  <tr><th>Hospitalizaciones por estado</th><td>${fila(d.hospitalizaciones_por_estado)}</td></tr>
+  <tr><th>Cobros registrados</th><td>${esc(d.cobros_registrados)}</td></tr>
+  <tr><th>Ingresos (MXN)</th><td>$${esc(d.ingresos_mxn)}</td></tr>
+  <tr><th>Ingresos por método</th><td>${fila(d.ingresos_por_metodo)}</td></tr>
+  <tr><th>Recetas emitidas</th><td>${esc(d.recetas_emitidas)}</td></tr>
+  <tr><th>Órdenes de estudio</th><td>${esc(d.ordenes_de_estudio_emitidas)}</td></tr></table>`;
+};
+</script>
+</body>
+</html>
